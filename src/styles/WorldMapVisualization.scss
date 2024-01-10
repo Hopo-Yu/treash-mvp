@@ -1,0 +1,9 @@
+.world-map-visualization {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .map-component {
+    flex-grow: 1; // Allows map to take up all remaining space
+  }
+}

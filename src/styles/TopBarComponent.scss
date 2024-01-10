@@ -1,0 +1,25 @@
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+
+  // Group the dropdown with its corresponding input
+  .dropdown-group {
+    display: flex;
+    align-items: center;
+
+    .mui-text-field {
+      margin-right: 5px;
+    }
+  }
+
+  // Timeline buttons styling
+  .timeline-buttons {
+    display: flex;
+
+    .mui-button {
+      margin-right: 5px;
+    }
+  }
+}

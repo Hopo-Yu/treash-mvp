@@ -1,0 +1,20 @@
+.node-library-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+
+  .search-and-filter {
+    margin-bottom: 12px; // Reduced margin for closer spacing
+  }
+
+  .tag-filter {
+    margin-bottom: 20px; // Increased margin for more spacing
+  }
+
+  .node-display {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+}
