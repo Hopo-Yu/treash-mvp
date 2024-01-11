@@ -49,6 +49,16 @@ app.on('ready', async () => {
     console.log('Adding node:', { title, description });
     return NodeModel.addNode(title, description);
   });
+
+  ipcMain.handle('edit-node', async (event, nodeId, title, description) => {
+    NodeModel.editNode(nodeId, title, description);
+  });
+  
+  ipcMain.handle('delete-node', async (event, nodeId) => {
+    console.log('IPC received delete request for nodeId:', nodeId);
+    NodeModel.deleteNode(nodeId);
+  });
+  
   
 });
 // app.on('ready', async () => {

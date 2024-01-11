@@ -12,4 +12,13 @@ export const addNode = (title: string, description: string) => {
   return info.lastInsertRowid;
 };
 
-// Add more functions as needed for update and delete
+export const editNode = (nodeId: number, title: string, description: string) => {
+  const stmt = db.prepare('UPDATE Node SET Title = ?, Description = ? WHERE NodeID = ?');
+  stmt.run(title, description, nodeId);
+};
+
+export const deleteNode = (nodeId: number) => {
+  console.log('Executing delete in database for nodeId:', nodeId);
+  const stmt = db.prepare('DELETE FROM Node WHERE NodeID = ?');
+  stmt.run(nodeId);
+};

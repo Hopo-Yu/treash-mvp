@@ -9,7 +9,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import Chip from '@mui/material/Chip';
 import AddIcon from '@mui/icons-material/Add';
 
-const NodeCard = ({ title, description, tags = [] }) => {
+const NodeCard = ({ nodeId, title, description, tags = [] }) => {
+
+  const handleDelete = async () => {
+    try {
+      console.log('Attempting to delete node with ID:', nodeId);
+      await window.electron.deleteNode(nodeId);
+      // Refresh your node list or use a state management solution
+    } catch (error) {
+      console.error('Error deleting node:', error);
+    }
+  };
+
   return (
     <Card style={{ cursor: 'pointer', position: 'relative' }}>
       <CardContent>
@@ -37,7 +48,7 @@ const NodeCard = ({ title, description, tags = [] }) => {
         <IconButton onClick={() => console.log('Edit node...')}>
           <EditIcon />
         </IconButton>
-        <IconButton onClick={() => console.log('Delete node...')}>
+        <IconButton onClick={handleDelete}>
           <DeleteIcon />
         </IconButton>
       </div>

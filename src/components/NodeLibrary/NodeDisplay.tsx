@@ -21,6 +21,7 @@ const NodeDisplay = () => {
       {nodes.map((node, index) => (
         <Grid item xs={12} key={node.NodeID || index}>
           <NodeCard 
+            nodeId={node.NodeID}
             title={node.Title} 
             description={node.Description} 
             tags={node.Tags} // Assuming each node has a Tags array
