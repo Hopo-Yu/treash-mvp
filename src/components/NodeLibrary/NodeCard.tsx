@@ -8,14 +8,20 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import Chip from '@mui/material/Chip';
 import AddIcon from '@mui/icons-material/Add';
+import { useDispatch } from 'react-redux';
+import { setNodes } from '../../redux/slices/nodesSlice';
 
 const NodeCard = ({ nodeId, title, description, tags = [] }) => {
+  const dispatch = useDispatch();
 
   const handleDelete = async () => {
     try {
       console.log('Attempting to delete node with ID:', nodeId);
       await window.electron.deleteNode(nodeId);
-      // Refresh your node list or use a state management solution
+      window.electron.getNodes()
+        .then(updatedNodes => {
+          dispatch(setNodes(updatedNodes));
+        });
     } catch (error) {
       console.error('Error deleting node:', error);
     }

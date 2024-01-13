@@ -26,15 +26,19 @@
  * ```
  */
 
+// renderer.tsx
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';  // Create this file to add global styles
+import './index.css';  // Global styles
 import App from './App';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';  // Ensure this path is correct
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <Provider store={store}>
+      <App />
+    </Provider>,
   document.getElementById('root')
 );
+
 console.log('renderer.tsx is loaded');
