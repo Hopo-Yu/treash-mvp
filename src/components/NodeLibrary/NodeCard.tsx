@@ -1,5 +1,5 @@
 // NodeCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -10,9 +10,14 @@ import Chip from '@mui/material/Chip';
 import AddIcon from '@mui/icons-material/Add';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
+import EditNodeModal from './EditNodeModal';
 
 const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const dispatch = useDispatch();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const openEditModal = () => setIsEditModalOpen(true);
+  const closeEditModal = () => setIsEditModalOpen(false);
 
   const handleDelete = async () => {
     try {
@@ -51,13 +56,20 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
         </div>
       </CardContent>
       <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-        <IconButton onClick={() => console.log('Edit node...')}>
+        <IconButton onClick={openEditModal}>
           <EditIcon />
         </IconButton>
         <IconButton onClick={handleDelete}>
           <DeleteIcon />
         </IconButton>
       </div>
+      <EditNodeModal
+        open={isEditModalOpen}
+        onClose={closeEditModal}
+        nodeId={nodeId}
+        currentTitle={title}
+        currentDescription={description}
+      />
     </Card>
   );
 };
