@@ -11,13 +11,18 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
 import EditNodeModal from './EditNodeModal';
+import TagManagementModal from './TagManagementModal'; 
 
 const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const dispatch = useDispatch();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
 
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
+
+  const openTagManagementModal = () => setIsTagManagementModalOpen(true);
+  const closeTagManagementModal = () => setIsTagManagementModalOpen(false);
 
   const handleDelete = async () => {
     try {
@@ -50,7 +55,7 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
               style={{ marginRight: '4px' }} 
             />
           ))}
-          <IconButton size="small" onClick={() => console.log('Opening TagManagement...')}>
+          <IconButton size="small" onClick={openTagManagementModal}>
             <AddIcon />
           </IconButton>
         </div>
@@ -70,6 +75,11 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
         currentTitle={title}
         currentDescription={description}
       />
+      <TagManagementModal
+        open={isTagManagementModalOpen}
+        onClose={closeTagManagementModal}
+        nodeId={nodeId}
+       />
     </Card>
   );
 };
