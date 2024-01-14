@@ -9,15 +9,17 @@ import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 
-const TagManagementModal = ({ open, onClose, selectedTags = [], handleTagSelection }) => {
+const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpdate }) => {
   const [tags, setTags] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [newTagName, setNewTagName] = useState('');
+  const [nodeTags, setNodeTags] = useState([]);
 
   // Fetch and set tags when the modal opens
   useEffect(() => {
     if (open) {
       fetchTags();
+      fetchNodeTags();
     }
   }, [open]);
 
@@ -41,6 +43,32 @@ const TagManagementModal = ({ open, onClose, selectedTags = [], handleTagSelecti
       setNewTagName('');
     }
   };
+
+  const fetchNodeTags = async () => {
+    const fetchedNodeTags = await window.electron.getNodeTags(nodeId);
+    setNodeTags(fetchedNodeTags);
+  };
+
+  const handleTagSelection = async (tag) => {
+    // Check if the tag ID is already in the nodeTags array
+    const tagIsSelected = nodeTags.some(t => t.TagID === tag.TagID);
+  
+    if (tagIsSelected) {
+      // If tag is already selected, remove it (delete association)
+      await window.electron.deleteNodeTag(nodeId, tag.TagID);
+    } else {
+      // If tag is not selected, add it (create association)
+      await window.electron.addNodeTag(nodeId, tag.TagID);
+    }
+  
+    // Refresh the node's tags after updating
+    fetchNodeTags();
+  
+    // Inform the parent component about the update
+    onTagUpdate(tag); 
+  };
+
+  
 
   return (
     <Dialog open={open} onClose={onClose}>

@@ -9,5 +9,8 @@ contextBridge.exposeInMainWorld('electron', {
   getTags: () => ipcRenderer.invoke('get-tags'),
   addTag: (tagName) => ipcRenderer.invoke('add-tag', tagName),
   editTag: (tagId, tagName) => ipcRenderer.invoke('edit-tag', tagId, tagName),
-  deleteTag: (tagId) => ipcRenderer.invoke('delete-tag', tagId)
+  deleteTag: (tagId) => ipcRenderer.invoke('delete-tag', tagId),
+  addNodeTag: (nodeId, tagId) => ipcRenderer.invoke('add-node-tag', nodeId, tagId),
+  deleteNodeTag: (nodeId, tagId) => ipcRenderer.invoke('delete-node-tag', nodeId, tagId),
+  getNodeTags: (nodeId) => ipcRenderer.invoke('get-node-tags', nodeId),
 });

@@ -1,5 +1,5 @@
 // NodeCard.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -17,12 +17,21 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const dispatch = useDispatch();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+  const [nodeTags, setNodeTags] = useState([]);
+
+  useEffect(() => {
+    fetchNodeTags();
+  }, []);
 
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
 
   const openTagManagementModal = () => setIsTagManagementModalOpen(true);
-  const closeTagManagementModal = () => setIsTagManagementModalOpen(false);
+
+  const closeTagManagementModal = () => {
+    setIsTagManagementModalOpen(false);
+    fetchNodeTags(); // Fetch tags again when the modal closes
+  };
 
   const handleDelete = async () => {
     try {
@@ -37,6 +46,32 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
     }
   };
 
+  const fetchNodeTags = async () => {
+    const fetchedNodeTags = await window.electron.getNodeTags(nodeId);
+    setNodeTags(fetchedNodeTags);
+  };
+
+  const handleTagRemove = async (tagId) => {
+    await window.electron.deleteNodeTag(nodeId, tagId);
+    fetchNodeTags(); // Refresh the node's tags
+  };
+
+  const handleTagUpdate = (updatedTag) => {
+    setNodeTags((prevTags) => {
+      // Check if the tag is already in the array
+      const isTagPresent = prevTags.some(tag => tag.TagID === updatedTag.TagID);
+      if (isTagPresent) {
+        // If it's present, remove it (unselect)
+        return prevTags.filter(tag => tag.TagID !== updatedTag.TagID);
+      } else {
+        // If not, add it (select)
+        return [...prevTags, updatedTag];
+      }
+    });
+  };
+  
+
+
   return (
     <Card style={{ cursor: 'pointer', position: 'relative' }}>
       <CardContent>
@@ -47,18 +82,18 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
           {description}
         </Typography>
         <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
-          {tags.map((tag, index) => (
-            <Chip 
-              key={index} 
-              label={tag} 
-              onDelete={() => console.log(`Removing tag ${tag}...`)} 
-              style={{ marginRight: '4px' }} 
-            />
-          ))}
-          <IconButton size="small" onClick={openTagManagementModal}>
-            <AddIcon />
-          </IconButton>
-        </div>
+        {nodeTags.map((tag) => (
+          <Chip 
+            key={tag.TagID} 
+            label={tag.TagName} 
+            onDelete={() => handleTagRemove(tag.TagID)} 
+            style={{ marginRight: '4px' }} 
+          />
+        ))}
+        <IconButton size="small" onClick={openTagManagementModal}>
+          <AddIcon />
+        </IconButton>
+      </div>
       </CardContent>
       <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
         <IconButton onClick={openEditModal}>
@@ -79,7 +114,9 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
         open={isTagManagementModalOpen}
         onClose={closeTagManagementModal}
         nodeId={nodeId}
-       />
+        selectedTags={nodeTags.map(tag => tag.TagName)}
+        onTagUpdate={handleTagUpdate} // Pass the callback
+      />
     </Card>
   );
 };
