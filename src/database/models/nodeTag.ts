@@ -15,3 +15,8 @@ export const getNodeTags = (nodeId: number) => {
   const stmt = db.prepare('SELECT t.TagID, t.TagName FROM Tag t JOIN NodeTag nt ON t.TagID = nt.TagID WHERE nt.NodeID = ?');
   return stmt.all(nodeId);
 };
+
+export const deleteNodeTagAssociations = (tagId: number) => {
+  const stmt = db.prepare('DELETE FROM NodeTag WHERE TagID = ?');
+  stmt.run(tagId);
+};

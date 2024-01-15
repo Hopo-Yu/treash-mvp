@@ -90,6 +90,16 @@ app.on('ready', async () => {
     return NodeTagModel.getNodeTags(nodeId);
   });
 
+  ipcMain.handle('delete-node-tag-associations', async (event, tagId) => {
+    try {
+      NodeTagModel.deleteNodeTagAssociations(tagId);
+      return { success: true };
+    } catch (error) {
+      console.error('Error in deleteNodeTagAssociations:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
 });
 // app.on('ready', async () => {
 //   await initializeDatabase();

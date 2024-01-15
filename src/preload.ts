@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('electron', {
   addNodeTag: (nodeId, tagId) => ipcRenderer.invoke('add-node-tag', nodeId, tagId),
   deleteNodeTag: (nodeId, tagId) => ipcRenderer.invoke('delete-node-tag', nodeId, tagId),
   getNodeTags: (nodeId) => ipcRenderer.invoke('get-node-tags', nodeId),
+  deleteNodeTagAssociations: (tagId) => ipcRenderer.invoke('delete-node-tag-associations', tagId),
 });

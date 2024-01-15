@@ -68,6 +68,21 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
     onTagUpdate(tag); 
   };
 
+  const handleDeleteTag = async (tagId) => {
+    try {
+      // First, delete all associations of this tag in the NodeTag table
+      await window.electron.deleteNodeTagAssociations(tagId);
+  
+      // Then, delete the tag from the Tag table
+      await window.electron.deleteTag(tagId);
+  
+      // Refresh tags and node tags after deletion
+      fetchTags();
+      fetchNodeTags();
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+    }
+  };
   
 
   return (
@@ -106,6 +121,8 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
               key={tag.TagID || index}
               label={tag.TagName}
               onClick={() => handleTagSelection(tag)}
+              onDelete={() => handleDeleteTag(tag.TagID)}
+              deleteIcon={<CloseIcon />} // Import CloseIcon from @mui/icons-material
               style={{
                 margin: '4px',
                 backgroundColor: selectedTags.includes(tag.TagName) ? '#d0f0c0' : '#f0f0f0',
