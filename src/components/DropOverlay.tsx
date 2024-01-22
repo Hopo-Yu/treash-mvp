@@ -1,21 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
-import { Typography } from '@mui/material';
+import NodePositionCircle from './NodePositionCircle'; // Import the component
 
 const DropOverlay = ({ children, width, height }) => {
     const overlayRef = useRef(null);
     const [nodePositions, setNodePositions] = useState([]);
 
     const fetchNodePositions = async () => {
-        const positions = await window.electron.getAllNodePositions();
-        setNodePositions(positions);
+      const positions = await window.electron.getAllNodePositions();
+      setNodePositions(positions);
     };
-
-    useEffect(() => {
-        fetchNodePositions();
-    }, []);
-
+  
     const [, drop] = useDrop(() => ({
         accept: "node",
         drop: (item, monitor) => {
@@ -25,12 +21,40 @@ const DropOverlay = ({ children, width, height }) => {
                 const x = clientOffset.x - rect.left;
                 const y = clientOffset.y - rect.top;
                 console.log(`Dropped node at x: ${x}, y: ${y}`);
-                // Here you might want to save the new node position to the database
+                
+                // Save the position in the database
                 window.electron.saveNodePosition(item.id, x, y);
-                fetchNodePositions(); // Refresh positions after drop
+                // Fetch updated positions
+                fetchNodePositions();
             }
         },
-    }));
+    }), [nodePositions]); // Ensure the drop effect updates when nodePositions changes
+
+    useEffect(() => {
+        // Function to fetch and log positions
+        fetchNodePositions();
+    }, []); // Fetch node positions on component mount
+
+    // Handler functions for NodePositionCircle
+    const handleRightClick = (nodeID) => {
+        console.log('Right-clicked on node:', nodeID);
+        // Handle right-click logic here
+    };
+
+    const handleClick = (nodeID) => {
+        console.log('Clicked on node:', nodeID);
+        // Handle left-click logic here
+    };
+
+    const handleMouseEnter = (nodeID) => {
+        console.log('Mouse entered node:', nodeID);
+        // Handle mouse enter logic here
+    };
+
+    const handleMouseLeave = (nodeID) => {
+        console.log('Mouse left node:', nodeID);
+        // Handle mouse leave logic here
+    };
 
     // Attach the drop ref to the overlay div
     drop(overlayRef);
@@ -39,26 +63,16 @@ const DropOverlay = ({ children, width, height }) => {
         <Box sx={{ width: width, height: height, position: 'relative' }}>
             {children}
             {nodePositions.map((position) => (
-                <Box
+                <NodePositionCircle
                     key={position.PositionID}
-                    sx={{
-                        position: 'absolute',
-                        left: `${position.X}px`,
-                        top: `${position.Y}px`,
-                        width: 50, // Adjust the size of the circle
-                        height: 50, // Adjust the size of the circle
-                        backgroundColor: 'primary.main', // Use theme colors
-                        borderRadius: '50%', // Make it a circle
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        color: 'white', // Adjust text color
-                    }}
-                >
-                    <Typography variant="caption">
-                        {position.NodeID} {/* Display the node ID or any other data */}
-                    </Typography>
-                </Box>
+                    nodeID={position.NodeID}
+                    x={position.X}
+                    y={position.Y}
+                    onRightClick={handleRightClick}
+                    onClick={handleClick}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                />
             ))}
             <div 
                 ref={overlayRef} 

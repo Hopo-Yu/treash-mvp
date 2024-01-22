@@ -60,6 +60,8 @@ app.on('ready', async () => {
     return NodePositionModel.getAllNodePositions();
   });
 
+
+
   // above is world map 2d
 
   ipcMain.handle('get-nodes', async () => {
@@ -120,6 +122,10 @@ app.on('ready', async () => {
       console.error('Error in deleteNodeTagAssociations:', error);
       return { success: false, error: error.message };
     }
+  });
+
+  ipcMain.handle('get-node-title', async (event, nodeId) => {
+    return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel
   });
 
 });

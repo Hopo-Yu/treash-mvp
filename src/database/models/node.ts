@@ -22,3 +22,9 @@ export const deleteNode = (nodeId: number) => {
   const stmt = db.prepare('DELETE FROM Node WHERE NodeID = ?');
   stmt.run(nodeId);
 };
+
+export const getNodeTitle = (nodeId: number) => {
+  const stmt = db.prepare('SELECT Title FROM Node WHERE NodeID = ?');
+  const node = stmt.get(nodeId);
+  return node ? node.Title : null;
+};
