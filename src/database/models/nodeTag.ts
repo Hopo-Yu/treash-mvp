@@ -20,3 +20,15 @@ export const deleteNodeTagAssociations = (tagId: number) => {
   const stmt = db.prepare('DELETE FROM NodeTag WHERE TagID = ?');
   stmt.run(tagId);
 };
+
+
+export const getNodesByTagName = (tagName: string) => {
+  const stmt = db.prepare(`
+    SELECT n.* 
+    FROM Node n 
+    JOIN NodeTag nt ON n.NodeID = nt.NodeID 
+    JOIN Tag t ON nt.TagID = t.TagID 
+    WHERE t.TagName = ?
+  `);
+  return stmt.all(tagName);
+};

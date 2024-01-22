@@ -128,6 +128,10 @@ app.on('ready', async () => {
     return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel
   });
 
+  ipcMain.handle('get-nodes-by-tag-name', async (event, tagName) => {
+    return NodeTagModel.getNodesByTagName(tagName);
+  });
+
 });
 // app.on('ready', async () => {
 //   await initializeDatabase();
