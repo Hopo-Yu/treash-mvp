@@ -19,6 +19,6 @@ contextBridge.exposeInMainWorld('electron', {
   //world map 2d
   saveNodePosition: (nodeId, x, y) => ipcRenderer.invoke('save-node-position', nodeId, x, y),
   getAllNodePositions: () => ipcRenderer.invoke('get-all-node-positions'),
-  
+  getNodePositionsByNodeIds: (nodeIds) => ipcRenderer.invoke('get-node-positions-by-node-ids', nodeIds),
 });
 

@@ -16,7 +16,6 @@ const NodeDisplay = ({ filteredNodeIds }) => {
       // Fetch nodes only if the nodes state is empty
       window.electron.getNodes()
         .then(fetchedNodes => {
-          console.log('Nodes received in NodeDisplay:', fetchedNodes);
           if (!fetchedNodes || fetchedNodes.length === 0) {
             console.error('No nodes were fetched from the database.');
           }
@@ -36,7 +35,6 @@ const NodeDisplay = ({ filteredNodeIds }) => {
       const filteredNodes = nodes.filter(node => filteredNodeIds.includes(node.NodeID));
       setDisplayedNodes(filteredNodes);
     }
-    console.log("Displayed Nodes:", displayedNodes); // Log nodes to be displayed
   }, [filteredNodeIds, nodes]);
 
   return (

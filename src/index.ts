@@ -60,7 +60,15 @@ app.on('ready', async () => {
     return NodePositionModel.getAllNodePositions();
   });
 
-
+  ipcMain.handle('get-node-positions-by-node-ids', async (event, nodeIds) => {
+    try {
+        const positions = NodePositionModel.getNodePositionsByNodeIds(nodeIds);
+        return positions;
+    } catch (error) {
+        console.error('Error fetching node positions by node IDs:', error);
+        throw error; // or handle error as needed
+    }
+});
 
   // above is world map 2d
 

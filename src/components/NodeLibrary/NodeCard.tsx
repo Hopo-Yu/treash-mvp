@@ -11,7 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
 import EditNodeModal from './EditNodeModal';
-import TagManagementModal from './TagManagementModal'; 
+import TagManagementModal from '../TagManagementModal'; 
 import { useDrag } from 'react-dnd';
 
 

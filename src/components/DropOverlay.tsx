@@ -3,14 +3,30 @@ import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
 import NodePositionCircle from './NodePositionCircle'; // Import the component
 
-const DropOverlay = ({ children, width, height }) => {
+const DropOverlay = ({ children, width, height, filteredNodeIds }) => {
     const overlayRef = useRef(null);
     const [nodePositions, setNodePositions] = useState([]);
 
+    console.log("Filtered Node IDs received in DropOverlay:", filteredNodeIds);
+
     const fetchNodePositions = async () => {
-      const positions = await window.electron.getAllNodePositions();
+      let positions;
+      if (filteredNodeIds.length > 0) {
+          // Extract just the NodeID values from the filteredNodeIds array
+          const nodeIds = filteredNodeIds.map(node => node.NodeID);
+          console.log('Node IDs to fetch positions for:', nodeIds); // Log the nodeIds to fetch
+          positions = await window.electron.getNodePositionsByNodeIds(nodeIds);
+      } else {
+          // Fetch all positions if no filter is applied
+          positions = await window.electron.getAllNodePositions();
+      }
+      console.log('Fetched node positions:', positions);
       setNodePositions(positions);
     };
+    
+
+  
+
   
     const [, drop] = useDrop(() => ({
         accept: "node",
@@ -31,9 +47,9 @@ const DropOverlay = ({ children, width, height }) => {
     }), [nodePositions]); // Ensure the drop effect updates when nodePositions changes
 
     useEffect(() => {
-        // Function to fetch and log positions
-        fetchNodePositions();
-    }, []); // Fetch node positions on component mount
+      // Refetch node positions whenever filteredNodeIds changes
+      fetchNodePositions();
+  }, [filteredNodeIds]); 
 
     // Handler functions for NodePositionCircle
     const handleRightClick = (nodeID) => {
