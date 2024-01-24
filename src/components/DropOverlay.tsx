@@ -3,31 +3,29 @@ import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
 import NodePositionCircle from './NodePositionCircle'; // Import the component
 
-const DropOverlay = ({ children, width, height, filteredNodeIds }) => {
+const DropOverlay = ({ children, width, height, selectedTagIds }) => {
     const overlayRef = useRef(null);
     const [nodePositions, setNodePositions] = useState([]);
 
-    console.log("Filtered Node IDs received in DropOverlay:", filteredNodeIds);
-
     const fetchNodePositions = async () => {
       let positions;
-      if (filteredNodeIds.length > 0) {
-          // Extract just the NodeID values from the filteredNodeIds array
-          const nodeIds = filteredNodeIds.map(node => node.NodeID);
-          console.log('Node IDs to fetch positions for:', nodeIds); // Log the nodeIds to fetch
-          positions = await window.electron.getNodePositionsByNodeIds(nodeIds);
+      if (selectedTagIds.length > 0) {
+          console.log('Tag IDs to fetch node positions for:', selectedTagIds); // Log the tagIds to fetch
+          
+          // Fetch node IDs based on selected tag IDs first
+          const nodeIds = await window.electron.getNodesByTagIds(selectedTagIds);
+          const uniqueNodeIds = [...new Set(nodeIds.map(node => node.NodeID))]; // Remove duplicates
+          
+          // Then fetch node positions based on the node IDs
+          positions = await window.electron.getNodePositionsByNodeIds(uniqueNodeIds);
       } else {
-          // Fetch all positions if no filter is applied
+          // Fetch all positions if no tag is selected
           positions = await window.electron.getAllNodePositions();
       }
       console.log('Fetched node positions:', positions);
       setNodePositions(positions);
     };
-    
 
-  
-
-  
     const [, drop] = useDrop(() => ({
         accept: "node",
         drop: (item, monitor) => {
@@ -47,9 +45,9 @@ const DropOverlay = ({ children, width, height, filteredNodeIds }) => {
     }), [nodePositions]); // Ensure the drop effect updates when nodePositions changes
 
     useEffect(() => {
-      // Refetch node positions whenever filteredNodeIds changes
+      // Refetch node positions whenever selectedTagIds changes
       fetchNodePositions();
-  }, [filteredNodeIds]); 
+    }, [selectedTagIds]); 
 
     // Handler functions for NodePositionCircle
     const handleRightClick = (nodeID) => {

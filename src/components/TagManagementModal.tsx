@@ -20,8 +20,22 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
     if (open) {
       fetchTags();
       fetchNodeTags();
+      checkSelectedTagsType();
     }
   }, [open]);
+
+  const checkSelectedTagsType = () => {
+    const allAreNumbers = selectedTags.every(tag => typeof tag === 'number');
+    const allAreStrings = selectedTags.every(tag => typeof tag === 'string');
+
+    if (allAreNumbers) {
+      console.log("selectedTags is an array of TagID");
+    } else if (allAreStrings) {
+      console.log("selectedTags is an array of TagName");
+    } else {
+      console.log("selectedTags is a mix or empty");
+    }
+  };
 
   const fetchTags = async () => {
     // Fetch tags from the database
@@ -116,20 +130,20 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
           </IconButton>
         </Box>
         <Box>
-          {tags.map((tag, index) => (
+        {tags.map((tag, index) => (
             <Chip
               key={tag.TagID || index}
               label={tag.TagName}
               onClick={() => handleTagSelection(tag)}
               onDelete={() => handleDeleteTag(tag.TagID)}
-              deleteIcon={<CloseIcon />} // Import CloseIcon from @mui/icons-material
+              deleteIcon={<CloseIcon />}
               style={{
                 margin: '4px',
                 backgroundColor: selectedTags.includes(tag.TagID) ? '#d0f0c0' : '#f0f0f0',
-            }}
-            
+              }}
             />
           ))}
+
         </Box>
       </Box>
       <Box display="flex" justifyContent="flex-end" p={2}>

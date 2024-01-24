@@ -122,7 +122,7 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
         open={isTagManagementModalOpen}
         onClose={closeTagManagementModal}
         nodeId={nodeId}
-        selectedTags={nodeTags.map(tag => tag.TagName)}
+        selectedTags={nodeTags.map(tag => tag.TagID)}
         onTagUpdate={handleTagUpdate} // Pass the callback
       />
     </Card>
