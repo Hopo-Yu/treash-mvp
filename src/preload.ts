@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('electron', {
   getNodeTags: (nodeId) => ipcRenderer.invoke('get-node-tags', nodeId),
   deleteNodeTagAssociations: (tagId) => ipcRenderer.invoke('delete-node-tag-associations', tagId),
   getNodeTitle: (nodeId) => ipcRenderer.invoke('get-node-title', nodeId),
-  getNodesByTagName: (tagName) => ipcRenderer.invoke('get-nodes-by-tag-name', tagName),
+  getNodesByTagIds: (tagId) => ipcRenderer.invoke('get-nodes-by-tag-ids', tagId),
   //world map 2d
   saveNodePosition: (nodeId, x, y) => ipcRenderer.invoke('save-node-position', nodeId, x, y),
   getAllNodePositions: () => ipcRenderer.invoke('get-all-node-positions'),

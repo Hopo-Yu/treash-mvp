@@ -5,35 +5,56 @@ import AddIcon from '@mui/icons-material/Add';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import TagManagementModal from './TagManagementModal'; // Import the component
 
-const TagFilter = () => {
+const TagFilter = ({ onNodeIdsChange }) => {
   const [selectedTags, setSelectedTags] = useState([]);
+  const [displayedNodeIds, setDisplayedNodeIds] = useState([]);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
 
-  // Fetch selected tags from the database or store
   useEffect(() => {
     const fetchSelectedTags = async () => {
-      // Fetch tags from the database
       const fetchedTags = await window.electron.getTags();
       setSelectedTags(fetchedTags);
     };
-
     fetchSelectedTags();
   }, []);
 
-  const handleTagRemove = async (tagId) => {
-    // Logic to remove the tag from the filter
-    // Update the state and possibly update the database or store
-    console.log('Removing tag with ID:', tagId);
-    setSelectedTags(selectedTags.filter(tag => tag.TagID !== tagId));
-  };
+  useEffect(() => {
+    const fetchNodeIds = async () => {
+      const nodeIds = await window.electron.getNodesByTagIds(selectedTags.map(tag => tag.TagID));
+      setDisplayedNodeIds(nodeIds);
+      if (onNodeIdsChange) {
+        onNodeIdsChange(nodeIds);
+      }
+    };
+    fetchNodeIds();
+  }, [selectedTags]); 
 
+  const handleTagRemove = async (tagId) => {
+    const updatedTags = selectedTags.filter(tag => tag.TagID !== tagId);
+    setSelectedTags(updatedTags);
+    if (onNodeIdsChange) {
+      onNodeIdsChange(displayedNodeIds); // Send node IDs
+    }
+  };
+  
   const handleTagUpdate = (updatedTag) => {
-    // Logic to add or remove a tag from the filter
     const isTagPresent = selectedTags.some(tag => tag.TagID === updatedTag.TagID);
+    let updatedTags;
     if (isTagPresent) {
-      setSelectedTags(selectedTags.filter(tag => tag.TagID !== updatedTag.TagID));
+      updatedTags = selectedTags.filter(tag => tag.TagID !== updatedTag.TagID);
     } else {
-      setSelectedTags([...selectedTags, updatedTag]);
+      updatedTags = [...selectedTags, updatedTag];
+    }
+    setSelectedTags(updatedTags);
+    if (onNodeIdsChange) {
+      onNodeIdsChange(displayedNodeIds); // Send node IDs
+    }
+  };
+  
+  const handleClearAll = () => {
+    setSelectedTags([]);
+    if (onNodeIdsChange) {
+      onNodeIdsChange([]); // Send empty array
     }
   };
 
@@ -53,13 +74,17 @@ const TagFilter = () => {
       <IconButton size="small" onClick={openTagManagementModal}>
         <AddIcon />
       </IconButton>
+      <IconButton size="small" onClick={handleClearAll}>
+        <ClearAllIcon />
+      </IconButton>
       <TagManagementModal
-        open={isTagManagementModalOpen}
-        onClose={closeTagManagementModal}
-        nodeId={null} // In case of a filter, nodeId might be null or you need a different approach
-        selectedTags={selectedTags.map(tag => tag.TagName)}
-        onTagUpdate={handleTagUpdate} // Pass the callback
-      />
+      open={isTagManagementModalOpen}
+      onClose={closeTagManagementModal}
+      nodeId={null} // In case of a filter, nodeId might be null or you need a different approach
+      selectedTags={selectedTags.map(tag => tag.TagName)} // Pass tag names
+      onTagUpdate={handleTagUpdate} // Pass the callback
+    />
+
     </div>
   );
 };

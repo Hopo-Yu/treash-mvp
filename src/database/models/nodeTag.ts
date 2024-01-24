@@ -22,13 +22,13 @@ export const deleteNodeTagAssociations = (tagId: number) => {
 };
 
 
-export const getNodesByTagName = (tagName: string) => {
+export const getNodesByTagIds = (tagIds) => {
+  const placeholders = tagIds.map(() => '?').join(',');
   const stmt = db.prepare(`
-    SELECT n.* 
-    FROM Node n 
-    JOIN NodeTag nt ON n.NodeID = nt.NodeID 
-    JOIN Tag t ON nt.TagID = t.TagID 
-    WHERE t.TagName = ?
+      SELECT Node.* 
+      FROM Node
+      JOIN NodeTag ON Node.NodeID = NodeTag.NodeID
+      WHERE NodeTag.TagID IN (${placeholders})
   `);
-  return stmt.all(tagName);
+  return stmt.all(tagIds);
 };

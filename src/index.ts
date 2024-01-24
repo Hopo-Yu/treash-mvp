@@ -128,9 +128,13 @@ app.on('ready', async () => {
     return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel
   });
 
-  ipcMain.handle('get-nodes-by-tag-name', async (event, tagName) => {
-    return NodeTagModel.getNodesByTagName(tagName);
-  });
+  ipcMain.handle('get-nodes-by-tag-ids', async (event, tagIds) => {
+    console.log("Received tagIds in main process:", tagIds); // Log received tagIds
+    const nodes = await NodeTagModel.getNodesByTagIds(tagIds);
+    console.log("Nodes fetched from DB:", nodes); // Log the nodes fetched from DB
+    return nodes;
+});
+
 
 });
 // app.on('ready', async () => {
