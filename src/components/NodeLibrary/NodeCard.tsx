@@ -11,7 +11,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
 import EditNodeModal from './EditNodeModal';
-import TagManagementModal from './TagManagementModal'; 
+import TagManagementModal from '../TagManagementModal'; 
+import { useDrag } from 'react-dnd';
+
 
 const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const dispatch = useDispatch();
@@ -70,10 +72,16 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
     });
   };
   
-
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "node",
+    item: { id: nodeId, title, description, tags },
+    collect: monitor => ({
+        isDragging: !!monitor.isDragging(),
+    }),
+}));
 
   return (
-    <Card style={{ cursor: 'pointer', position: 'relative' }}>
+    <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative' }}>
       <CardContent>
         <Typography variant="h5" component="div">
           {title}

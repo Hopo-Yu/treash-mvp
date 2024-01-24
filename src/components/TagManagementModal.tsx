@@ -125,8 +125,9 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
               deleteIcon={<CloseIcon />} // Import CloseIcon from @mui/icons-material
               style={{
                 margin: '4px',
-                backgroundColor: selectedTags.includes(tag.TagName) ? '#d0f0c0' : '#f0f0f0',
-              }}
+                backgroundColor: selectedTags.includes(tag.TagID) ? '#d0f0c0' : '#f0f0f0',
+            }}
+            
             />
           ))}
         </Box>
