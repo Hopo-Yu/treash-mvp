@@ -14,4 +14,11 @@ contextBridge.exposeInMainWorld('electron', {
   deleteNodeTag: (nodeId, tagId) => ipcRenderer.invoke('delete-node-tag', nodeId, tagId),
   getNodeTags: (nodeId) => ipcRenderer.invoke('get-node-tags', nodeId),
   deleteNodeTagAssociations: (tagId) => ipcRenderer.invoke('delete-node-tag-associations', tagId),
+  getNodeTitle: (nodeId) => ipcRenderer.invoke('get-node-title', nodeId),
+  getNodesByTagIds: (tagId) => ipcRenderer.invoke('get-nodes-by-tag-ids', tagId),
+  //world map 2d
+  saveNodePosition: (nodeId, x, y) => ipcRenderer.invoke('save-node-position', nodeId, x, y),
+  getAllNodePositions: () => ipcRenderer.invoke('get-all-node-positions'),
+  getNodePositionsByNodeIds: (nodeIds) => ipcRenderer.invoke('get-node-positions-by-node-ids', nodeIds),
 });
+

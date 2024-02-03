@@ -1,5 +1,5 @@
 // NodeCard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -12,7 +12,7 @@ import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
 import EditNodeModal from './EditNodeModal';
 import TagManagementModal from '../TagManagementModal'; 
-import { useDrag } from 'react-dnd';
+import { useDrag, useDrop } from 'react-dnd';
 
 
 const NodeCard = ({ nodeId, title, description, tags = [] }) => {
@@ -20,10 +20,40 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [nodeTags, setNodeTags] = useState([]);
+  const cardRef = useRef(null);
 
   useEffect(() => {
-    fetchNodeTags();
-  }, []);
+    // Add event listeners for dragover and drop
+    const handleDragOver = (e) => {
+      e.preventDefault(); // Necessary to allow a drop
+      e.dataTransfer.dropEffect = 'copy'; // Show a "copy" icon while dragging
+    };
+
+    const handleDrop = async (e) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const file = files[0]; // For simplicity, let's handle only the first file
+        const filePath = file.path; // Get the file path
+    
+        console.log(`File dropped on node ${nodeId}: ${file.name}, path: ${filePath}`);
+    
+        // Send the file path to the main process to be saved in the database
+        // await window.electron.saveFilePathToNode(nodeId, filePath);
+      }
+    };
+    
+
+    const cardElement = cardRef.current;
+    cardElement.addEventListener('dragover', handleDragOver);
+    cardElement.addEventListener('drop', handleDrop);
+
+    // Clean up the event listeners
+    return () => {
+      cardElement.removeEventListener('dragover', handleDragOver);
+      cardElement.removeEventListener('drop', handleDrop);
+    };
+  }, [nodeId]); 
 
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
@@ -78,54 +108,58 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
     collect: monitor => ({
         isDragging: !!monitor.isDragging(),
     }),
+
 }));
 
+
   return (
-    <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative' }}>
-      <CardContent>
-        <Typography variant="h5" component="div">
-          {title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-        <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
-        {nodeTags.map((tag) => (
-          <Chip 
-            key={tag.TagID} 
-            label={tag.TagName} 
-            onDelete={() => handleTagRemove(tag.TagID)} 
-            style={{ marginRight: '4px' }} 
-          />
-        ))}
-        <IconButton size="small" onClick={openTagManagementModal}>
-          <AddIcon />
-        </IconButton>
-      </div>
-      </CardContent>
-      <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-        <IconButton onClick={openEditModal}>
-          <EditIcon />
-        </IconButton>
-        <IconButton onClick={handleDelete}>
-          <DeleteIcon />
-        </IconButton>
-      </div>
-      <EditNodeModal
-        open={isEditModalOpen}
-        onClose={closeEditModal}
-        nodeId={nodeId}
-        currentTitle={title}
-        currentDescription={description}
-      />
-      <TagManagementModal
-        open={isTagManagementModalOpen}
-        onClose={closeTagManagementModal}
-        nodeId={nodeId}
-        selectedTags={nodeTags.map(tag => tag.TagID)}
-        onTagUpdate={handleTagUpdate} // Pass the callback
-      />
-    </Card>
+    <div ref={cardRef} style={{ opacity: isDragging ? 0.5 : 1, cursor: 'pointer', position: 'relative' }}>
+      <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative' }}>
+        <CardContent>
+          <Typography variant="h5" component="div">
+            {title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {description}
+          </Typography>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
+          {nodeTags.map((tag) => (
+            <Chip 
+              key={tag.TagID} 
+              label={tag.TagName} 
+              onDelete={() => handleTagRemove(tag.TagID)} 
+              style={{ marginRight: '4px' }} 
+            />
+          ))}
+          <IconButton size="small" onClick={openTagManagementModal}>
+            <AddIcon />
+          </IconButton>
+        </div>
+        </CardContent>
+        <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+          <IconButton onClick={openEditModal}>
+            <EditIcon />
+          </IconButton>
+          <IconButton onClick={handleDelete}>
+            <DeleteIcon />
+          </IconButton>
+        </div>
+        <EditNodeModal
+          open={isEditModalOpen}
+          onClose={closeEditModal}
+          nodeId={nodeId}
+          currentTitle={title}
+          currentDescription={description}
+        />
+        <TagManagementModal
+          open={isTagManagementModalOpen}
+          onClose={closeTagManagementModal}
+          nodeId={nodeId}
+          selectedTags={nodeTags.map(tag => tag.TagID)}
+          onTagUpdate={handleTagUpdate} // Pass the callback
+        />
+      </Card>
+    </div>
   );
 };
 

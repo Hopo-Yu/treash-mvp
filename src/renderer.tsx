@@ -33,10 +33,15 @@ import './index.css';  // Global styles
 import App from './App';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';  // Ensure this path is correct
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
 
 ReactDOM.render(
     <Provider store={store}>
-      <App />
+      <DndProvider backend={HTML5Backend}>
+        <App />
+      </DndProvider>
     </Provider>,
   document.getElementById('root')
 );
