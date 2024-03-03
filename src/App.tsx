@@ -10,11 +10,17 @@ import ExtensionMarket from './components/ExtensionMarket/index';
 import ExtensionDetail from './components/ExtensionDetail/index';
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
+import { useSelector, useDispatch } from 'react-redux';
+import { selectIsLoggedIn } from './redux/slices/loginSlice';
+import Login from './components/Auth/Login'; 
+
 
 function App() {
   const [nodeLibraryExpanded, setNodeLibraryExpanded] = useState(true);
   const [tabs, setTabs] = useState([{ id: 'home', title: 'Home', content: <div>Home Content</div>, active: true }]);
-
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const dispatch = useDispatch();
+  
   const toggleNodeLibrary = () => {
     setNodeLibraryExpanded(!nodeLibraryExpanded);
   };
@@ -69,7 +75,9 @@ function App() {
     setTabs(tabs.map(tab => ({ ...tab, active: false })).concat(newTab));
   };
 
-  
+  // if (!isLoggedIn) {
+  //   return <Login />;
+  // }
 
   return (
     <div className="App">
