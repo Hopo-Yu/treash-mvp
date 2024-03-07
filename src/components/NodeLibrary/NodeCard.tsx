@@ -1,13 +1,26 @@
 // NodeCard.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import Chip from '@mui/material/Chip';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  RemoveCircleOutline as RemoveCircleOutlineIcon,
+} from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice';
 import EditNodeModal from './EditNodeModal';
@@ -20,8 +33,13 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   const [nodeTags, setNodeTags] = useState([]);
+  const [filePaths, setFilePaths] = useState([]);
   const cardRef = useRef(null);
-
+  // State to manage collapsible sections
+  const [isFilesExpanded, setIsFilesExpanded] = useState(false);
+  const [isNodesExpanded, setIsNodesExpanded] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedFilePathId, setSelectedFilePathId] = useState(null);
   useEffect(() => {
     // Add event listeners for dragover and drop
     const handleDragOver = (e) => {
@@ -47,6 +65,8 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
     const cardElement = cardRef.current;
     cardElement.addEventListener('dragover', handleDragOver);
     cardElement.addEventListener('drop', handleDrop);
+
+    fetchFilePaths();
 
     // Clean up the event listeners
     return () => {
@@ -111,6 +131,101 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
 
 }));
 
+  const toggleFilesSection = () => setIsFilesExpanded(!isFilesExpanded);
+  const toggleNodesSection = () => setIsNodesExpanded(!isNodesExpanded);
+
+  
+  const handleAddFile = async () => {
+    try {
+      const filePath = await window.electron.selectFile(); // Corrected from electronAPI to electron
+      if (filePath) {
+        await window.electron.addFilePath(nodeId, filePath);
+        fetchFilePaths();
+      }
+    } catch (error) {
+      console.error('Failed to select file:', error);
+    }
+  };
+  
+  const fetchFilePaths = async () => {
+    const paths = await window.electron.getFilePathsByNodeId(nodeId);
+    setFilePaths(paths);
+  };
+
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedFilePathId(null);
+  };
+
+  const handleDeleteFile = async (filePathId) => {
+    await window.electron.deleteFilePath(filePathId);
+    fetchFilePaths();
+    handleClose();
+  };
+
+
+
+  const handleOpenFile = (filePathId) => {
+    const filePath = filePaths.find(({ FilePathID }) => FilePathID === filePathId)?.Path;
+    if (filePath) window.electron.openFile(filePath);
+    handleClose();
+  };
+
+  const renderFilePaths = () => (
+    filePaths.map(({ FilePathID, FileName }) => (
+      <ListItem
+        key={FilePathID}
+        button
+        onContextMenu={(event) => handleRightClick(event, FilePathID)}
+        onDoubleClick={() => handleDoubleClick(FilePathID)} // Added double-click handler here
+      >
+        <ListItemText primary={FileName} />
+        <ListItemSecondaryAction>
+          <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteFile(FilePathID)}>
+            <RemoveCircleOutlineIcon />
+          </IconButton>
+        </ListItemSecondaryAction>
+      </ListItem>
+    ))
+  );
+
+  const handleRightClick = (event, filePathId) => {
+    event.preventDefault();
+    setAnchorEl(event.currentTarget);
+    setSelectedFilePathId(filePathId);
+  };
+
+  const handleDoubleClick = (filePathId) => {
+    const filePath = filePaths.find(({ FilePathID }) => FilePathID === filePathId)?.Path;
+    if (filePath) {
+      window.electron.openFile(filePath); // Ensure this matches the exposed function in preload.ts
+    }
+  };
+
+  const handleOpenInFileExplorer = (filePathId) => {
+    const filePath = filePaths.find(({ FilePathID }) => FilePathID === filePathId)?.Path;
+    if (filePath) {
+      window.electron.openInFileExplorer(filePath); // We will define this in preload.ts next
+    }
+    handleClose();
+  };
+  
+  
+  const contextMenu = (
+    <Menu
+      anchorEl={anchorEl}
+      open={Boolean(anchorEl)}
+      onClose={handleClose}
+      keepMounted
+    >
+      <MenuItem onClick={() => handleOpenFile(selectedFilePathId)}>Open</MenuItem>
+      <MenuItem onClick={() => handleOpenInFileExplorer(selectedFilePathId)}>Open in File Explorer</MenuItem>
+      <MenuItem onClick={() => handleDeleteFile(selectedFilePathId)}>Delete</MenuItem>
+    </Menu>
+  );
+
+  
 
   return (
     <div ref={cardRef} style={{ opacity: isDragging ? 0.5 : 1, cursor: 'pointer', position: 'relative' }}>
@@ -122,6 +237,19 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
           <Typography variant="body2" color="text.secondary">
             {description}
           </Typography>
+          <div onClick={() => setIsFilesExpanded(!isFilesExpanded)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+            <Typography>Related Files</Typography>
+            <IconButton>{isFilesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
+          </div>
+          {isFilesExpanded && (
+            <List dense>
+              {renderFilePaths()}
+              <ListItem button onClick={handleAddFile}>
+                <ListItemText primary="Add File" />
+                <AddIcon />
+              </ListItem>
+            </List>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
           {nodeTags.map((tag) => (
             <Chip 
@@ -136,6 +264,7 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
           </IconButton>
         </div>
         </CardContent>
+        {contextMenu}
         <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
           <IconButton onClick={openEditModal}>
             <EditIcon />

@@ -1,8 +1,10 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog,  shell } from 'electron';
+import { exec } from 'child_process';
 import { initializeDatabase } from './database/index';
 import * as NodeModel from './database/models/node';
 import * as TagModel from './database/models/tag';
 import * as NodeTagModel from './database/models/nodeTag';
+import * as FilePathModel from './database/models/filePath';
 
 //world map 2d
 import { initializeMapDatabase } from './components/Map2d/database/initializeDatabase';
@@ -140,10 +142,36 @@ app.on('ready', async () => {
     console.log("Received tagIds in main process:", tagIds); // Log received tagIds
     const nodes = await NodeTagModel.getNodesByTagIds(tagIds);
     console.log("Nodes fetched from DB:", nodes); // Log the nodes fetched from DB
-    return nodes;
-});
+    return nodes;  
+  });
 
+  ipcMain.handle('select-file', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openFile']
+    });
+    if (canceled) {
+        return;
+    } else {
+        return filePaths[0]; // Ensure this is returning the path as expected
+    }
+  });
 
+  ipcMain.handle('add-file-path', (event, nodeId, filePath) => FilePathModel.addFilePath(nodeId, filePath));
+  ipcMain.handle('get-file-paths-by-node-id', (event, nodeId) => FilePathModel.getFilePathsByNodeId(nodeId));
+  ipcMain.handle('delete-file-path', (event, filePathId) => FilePathModel.deleteFilePath(filePathId));
+
+  ipcMain.handle('open-file', async (event, filePath) => {
+    try {
+      await shell.openPath(filePath);
+    } catch (error) {
+      console.error('Failed to open file:', error);
+    }
+  });
+
+  ipcMain.handle('open-in-file-explorer', async (event, filePath) => {
+    shell.showItemInFolder(filePath);
+  });
+  
 });
 // app.on('ready', async () => {
 //   await initializeDatabase();

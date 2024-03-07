@@ -3,6 +3,7 @@ import NodeSearchBar from './NodeSearchBar';
 import TagFilter from '../TagFilter';
 import NodeDisplay from './NodeDisplay';
 import Box from '@mui/material/Box';
+import '../../styles/NodeLibrary.scss';
 
 const NodeLibrary = () => {
   const [selectedTagIds, setSelectedTagIds] = useState([]);

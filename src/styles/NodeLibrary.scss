@@ -1,0 +1,8 @@
+// NodeLibrary.module.scss
+// Define your variables at the top of your Sass file
+$headerHeight: 60; // Header height in pixels
+
+.node-library-container {
+  height: calc(100vh - #{$headerHeight}px); // Use the variable inside calc()
+  overflow-y: auto; // Make it scrollable
+}

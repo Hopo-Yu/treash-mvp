@@ -21,6 +21,12 @@ export const initializeDatabase = () => {
       FOREIGN KEY (NodeID) REFERENCES Node(NodeID),
       FOREIGN KEY (TagID) REFERENCES Tag(TagID)
     );
+    CREATE TABLE IF NOT EXISTS FilePath (
+      FilePathID INTEGER PRIMARY KEY AUTOINCREMENT,
+      NodeID INTEGER,
+      Path TEXT,
+      FOREIGN KEY (NodeID) REFERENCES Node(NodeID) ON DELETE CASCADE
+    );
   `);
 };
 

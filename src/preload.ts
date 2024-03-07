@@ -1,5 +1,5 @@
 // preload.ts
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, dialog } from 'electron';
 
 contextBridge.exposeInMainWorld('electron', {
   getNodes: () => ipcRenderer.invoke('get-nodes'),
@@ -20,5 +20,14 @@ contextBridge.exposeInMainWorld('electron', {
   saveNodePosition: (nodeId, x, y) => ipcRenderer.invoke('save-node-position', nodeId, x, y),
   getAllNodePositions: () => ipcRenderer.invoke('get-all-node-positions'),
   getNodePositionsByNodeIds: (nodeIds) => ipcRenderer.invoke('get-node-positions-by-node-ids', nodeIds),
+  selectFile: async () => {
+    return ipcRenderer.invoke('select-file');
+  },
+  addFilePath: (nodeId, filePath) => ipcRenderer.invoke('add-file-path', nodeId, filePath),
+  getFilePathsByNodeId: (nodeId) => ipcRenderer.invoke('get-file-paths-by-node-id', nodeId),
+  deleteFilePath: (filePathId) => ipcRenderer.invoke('delete-file-path', filePathId),
+  openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
+
+  openInFileExplorer: (filePath) => ipcRenderer.invoke('open-in-file-explorer', filePath),
 });
 

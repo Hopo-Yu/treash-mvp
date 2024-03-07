@@ -1,6 +1,6 @@
 // src/components/Map2d/database/models/nodePosition.ts
 
-import db from '../../../../database/index'; // Adjust the path based on your directory structure
+import db from '../../../../database/index'; 
 
 export const saveNodePosition = (nodeId: number, x: number, y: number) => {
   const stmt = db.prepare('INSERT INTO NodePosition (NodeID, X, Y) VALUES (?, ?, ?)');
