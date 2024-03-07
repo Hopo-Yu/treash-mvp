@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
-import NodePositionCircle from './NodePositionCircle'; // Import the component
+import NodePositionCircle from './NodePositionCircle'; 
+import { useDispatch } from 'react-redux';
+import { selectNode } from '../redux/slices/nodesSlice';
 
 const DropOverlay = ({ children, width, height, selectedTagIds }) => {
     const overlayRef = useRef(null);
     const [nodePositions, setNodePositions] = useState([]);
-
+    const dispatch = useDispatch();
     const fetchNodePositions = async () => {
       let positions;
       if (selectedTagIds.length > 0) {
@@ -60,6 +62,10 @@ const DropOverlay = ({ children, width, height, selectedTagIds }) => {
         // Handle left-click logic here
     };
 
+    const handleDoubleClick = (nodeID) => {
+      console.log('Double-clicked on node:', nodeID);
+      dispatch(selectNode(nodeID)); // Dispatch action to select the node
+  };
     const handleMouseEnter = (nodeID) => {
         console.log('Mouse entered node:', nodeID);
         // Handle mouse enter logic here
@@ -84,6 +90,7 @@ const DropOverlay = ({ children, width, height, selectedTagIds }) => {
                     y={position.Y}
                     onRightClick={handleRightClick}
                     onClick={handleClick}
+                    onDoubleClick={handleDoubleClick}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 />

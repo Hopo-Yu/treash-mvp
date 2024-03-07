@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Grid from '@mui/material/Grid';
 import NodeCard from './NodeCard';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,7 +8,9 @@ import { setNodes } from '../../redux/slices/nodesSlice';
 const NodeDisplay = ({ selectedTagIds }) => {
   const dispatch = useDispatch();
   const nodes = useSelector((state: RootState) => state.nodes.nodes);
+  const selectedNodeId = useSelector((state: RootState) => state.nodes.selectedNodeId); // Get the selected node ID from Redux
   const [displayedNodes, setDisplayedNodes] = useState([]);
+  const nodeRefs = useRef({});
 
   useEffect(() => {
     async function fetchAndDisplayNodes() {
@@ -28,15 +30,23 @@ const NodeDisplay = ({ selectedTagIds }) => {
     fetchAndDisplayNodes();
   }, [dispatch, selectedTagIds]);
 
+  useEffect(() => {
+    // Scroll to the selected node when the selectedNodeId changes
+    if (selectedNodeId && nodeRefs.current[selectedNodeId]) {
+      nodeRefs.current[selectedNodeId].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [selectedNodeId]);
+
   return (
     <Grid container spacing={1} style={{ padding: '8px' }}>
       {displayedNodes.map((node, index) => (
-        <Grid item xs={12} key={node.NodeID || index}>
+        <Grid item xs={12} key={node.NodeID || index} ref={(el) => (nodeRefs.current[node.NodeID] = el)}>
           <NodeCard
             nodeId={node.NodeID}
             title={node.Title}
             description={node.Description}
             tags={node.Tags}
+            isSelected={selectedNodeId === node.NodeID}
           />
         </Grid>
       ))}

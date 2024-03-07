@@ -28,7 +28,9 @@ import TagManagementModal from '../TagManagementModal';
 import { useDrag, useDrop } from 'react-dnd';
 
 
-const NodeCard = ({ nodeId, title, description, tags = [] }) => {
+const NodeCard = ({ nodeId, title, description, tags = [], isSelected }) => {
+  const cardStyle = isSelected ? { backgroundColor: '#333', color: 'white' } : {};
+
   const dispatch = useDispatch();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
@@ -229,12 +231,13 @@ const NodeCard = ({ nodeId, title, description, tags = [] }) => {
 
   return (
     <div ref={cardRef} style={{ opacity: isDragging ? 0.5 : 1, cursor: 'pointer', position: 'relative' }}>
-      <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative' }}>
+      <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative', backgroundColor: isSelected ? '#333' : '',
+        color: isSelected ? 'white' : '', }}>
         <CardContent>
-          <Typography variant="h5" component="div">
+          <Typography variant="h5" component="div" style={{color: isSelected ? 'white' : 'inherit'}}>
             {title}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" style={{color: isSelected ? 'rgba(255, 255, 255, 0.7)' : 'inherit'}}>
             {description}
           </Typography>
           <div onClick={() => setIsFilesExpanded(!isFilesExpanded)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>

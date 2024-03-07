@@ -1,48 +1,39 @@
-// TagFilter.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import TagManagementModal from './TagManagementModal';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { setTagFilter, setAllTags } from '../redux/slices/nodesSlice'; // Assuming you've added this action
 
-const TagFilter = ({ onSelectedTagsChange }) => {
-  const [selectedTags, setSelectedTags] = useState([]);
+const TagFilter = () => {
+  const dispatch = useDispatch();
+  const tagFilterIds = useSelector((state: RootState) => state.nodes.tagFilter);
+  const allTags = useSelector((state: RootState) => state.nodes.allTags);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchSelectedTags = async () => {
-      const fetchedTags = await window.electron.getTags();
-      setSelectedTags(fetchedTags);
-    };
-    fetchSelectedTags();
-  }, []);
+    // Fetch tags only once on component mount, not in real-time
+    window.electron.getTags().then((tags) => {
+      dispatch(setAllTags(tags)); // Store all tags in the Redux state
+    });
+  }, [dispatch]);
 
-  useEffect(() => {
-    // Pass only the array of selected tag IDs to the parent component
-    if (onSelectedTagsChange) {
-      onSelectedTagsChange(selectedTags.map(tag => tag.TagID));
-    }
-  }, [selectedTags]); 
 
-  const handleTagRemove = async (tagId) => {
-    const updatedTags = selectedTags.filter(tag => tag.TagID !== tagId);
-    setSelectedTags(updatedTags);
+  const handleTagRemove = (tagId) => {
+    dispatch(setTagFilter(tagFilterIds.filter((id) => id !== tagId)));
   };
-  
+
   const handleTagUpdate = (updatedTag) => {
-    const isTagPresent = selectedTags.some(tag => tag.TagID === updatedTag.TagID);
-    let updatedTags;
-    if (isTagPresent) {
-      updatedTags = selectedTags.filter(tag => tag.TagID !== updatedTag.TagID);
-    } else {
-      updatedTags = [...selectedTags, updatedTag];
-    }
-    setSelectedTags(updatedTags);
+    dispatch(setTagFilter(updatedTag.isSelected 
+      ? tagFilterIds.filter((id) => id !== updatedTag.TagID) 
+      : [...tagFilterIds, updatedTag.TagID]));
   };
   
   const handleClearAll = () => {
-    setSelectedTags([]);
+    dispatch(setTagFilter([]));
   };
 
   const openTagManagementModal = () => setIsTagManagementModalOpen(true);
@@ -50,14 +41,17 @@ const TagFilter = ({ onSelectedTagsChange }) => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', margin: '8px' }}>
-      {selectedTags.map((tag) => (
-        <Chip 
-          key={tag.TagID} 
-          label={tag.TagName} 
-          onDelete={() => handleTagRemove(tag.TagID)} 
-          style={{ marginRight: '4px' }} 
-        />
-      ))}
+      {tagFilterIds.map((tagId) => {
+        const tag = allTags.find((t) => t.TagID === tagId);
+        return (
+          <Chip
+            key={tagId}
+            label={tag?.TagName || 'Unknown Tag'}
+            onDelete={() => handleTagRemove(tagId)}
+            style={{ marginRight: '4px' }}
+          />
+        );
+      })}
       <IconButton size="small" onClick={openTagManagementModal}>
         <AddIcon />
       </IconButton>
@@ -67,9 +61,9 @@ const TagFilter = ({ onSelectedTagsChange }) => {
       <TagManagementModal
         open={isTagManagementModalOpen}
         onClose={closeTagManagementModal}
-        nodeId={null} // In case of a filter, nodeId might be null or you need a different approach
-        selectedTags={selectedTags.map(tag => tag.TagID)} // Pass tag IDs
-        onTagUpdate={handleTagUpdate} // Pass the callback
+        nodeId={null}
+        selectedTags={tagFilterIds} // Pass tagFilterIds instead of selectedTags
+        onTagUpdate={handleTagUpdate}
       />
     </div>
   );
