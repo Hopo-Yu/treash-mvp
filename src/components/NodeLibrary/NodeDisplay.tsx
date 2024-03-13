@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { setNodes } from '../../redux/slices/nodesSlice';
 
-const NodeDisplay = ({ selectedTagIds }) => {
+const NodeDisplay = ({ selectedTagIds, searchKeyword }) => {
   const dispatch = useDispatch();
   const nodes = useSelector((state: RootState) => state.nodes.nodes);
   const selectedNodeId = useSelector((state: RootState) => state.nodes.selectedNodeId); // Get the selected node ID from Redux
@@ -15,20 +15,24 @@ const NodeDisplay = ({ selectedTagIds }) => {
   useEffect(() => {
     async function fetchAndDisplayNodes() {
       let fetchedNodes = [];
-      if (selectedTagIds.length === 0) {
-        fetchedNodes = await window.electron.getNodes();
+      
+      if (searchKeyword || selectedTagIds.length > 0) {
+        // If there is a search keyword or selected tags, use the searchNodes function
+        fetchedNodes = await window.electron.searchNodes(searchKeyword, selectedTagIds);
       } else {
-        fetchedNodes = await window.electron.getNodesByTagIds(selectedTagIds);
+        // If there's no search keyword and no selected tags, fetch all nodes
+        fetchedNodes = await window.electron.getNodes();
       }
+
       if (!fetchedNodes || fetchedNodes.length === 0) {
         console.error('No nodes were fetched from the database.');
       } else {
-        dispatch(setNodes(fetchedNodes)); // Update the nodes state in Redux store
+        dispatch(setNodes(fetchedNodes)); // Update the nodes state in the Redux store
         setDisplayedNodes(fetchedNodes); // Update displayed nodes
       }
     }
     fetchAndDisplayNodes();
-  }, [dispatch, selectedTagIds]);
+  }, [dispatch, selectedTagIds, searchKeyword]);
 
   useEffect(() => {
     // Scroll to the selected node when the selectedNodeId changes

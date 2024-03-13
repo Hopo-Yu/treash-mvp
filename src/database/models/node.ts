@@ -28,3 +28,20 @@ export const getNodeTitle = (nodeId: number) => {
   const node = stmt.get(nodeId);
   return node ? node.Title : null;
 };
+
+export const searchNodes = (searchTerm = '', tagIds = []) => {
+  // Construct a WHERE clause for tags if any tags are selected
+  const tagConditions = tagIds.length > 0 ? 'NodeTag.TagID IN (' + tagIds.join(',') + ')' : '1=1';
+
+  // Use LIKE operator for searchTerm with wildcard characters
+  const searchConditions = searchTerm ? `Node.Title LIKE '%${searchTerm}%' OR Node.Description LIKE '%${searchTerm}%'` : '1=1';
+
+  const stmt = db.prepare(`
+    SELECT Node.* FROM Node
+    LEFT JOIN NodeTag ON Node.NodeID = NodeTag.NodeID
+    WHERE (${searchConditions}) AND (${tagConditions})
+    GROUP BY Node.NodeID
+  `);
+
+  return stmt.all();
+};

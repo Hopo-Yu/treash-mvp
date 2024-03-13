@@ -25,19 +25,33 @@ function App() {
     setNodeLibraryExpanded(!nodeLibraryExpanded);
   };
 
+  const openTab = (newTab) => {
+    // Check if the tab is already open by looking for its id in the current tabs array
+    const existingTab = tabs.find(tab => tab.id === newTab.id);
+    if (existingTab) {
+      // If it exists, make it the active tab
+      setTabs(tabs.map(tab => ({
+        ...tab,
+        active: tab.id === newTab.id,
+      })));
+    } else {
+      // If it doesn't exist, add the new tab and make it the active tab
+      setTabs(tabs.map(tab => ({
+        ...tab,
+        active: false, // make all other tabs inactive
+      })).concat({ ...newTab, active: true }));
+    }
+  };
+
   const openWorldMapVisualization = () => {
-    // Add new World Map Visualization tab
+    // Define the new tab properties
     const newTab = {
       id: 'world-map',
       title: 'World Map Visualization',
       content: <WorldMapVisualization />,
-      active: true,
     };
-
-    // Deactivate existing tabs and add the new tab
-    setTabs(tabs.map(tab => ({ ...tab, active: false })).concat(newTab));
+    openTab(newTab); // Call the new openTab function
   };
-
   // Moved out from openWorldMapVisualization function
   const openUserDashboard = () => {
     const newTab = {

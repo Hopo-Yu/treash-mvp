@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import MapComponent from './MapComponent';
-import DropOverlay from '../DropOverlay';
+import DropOverlay from '../../../extensions/Map2d/DropOverlay';
 import TagFilter from './TagFilter'; // Import TagFilter component
 import '../../styles/WorldMapVisualization.scss'; // Importing the Sass file
 

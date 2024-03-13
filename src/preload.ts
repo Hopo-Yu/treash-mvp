@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('electron', {
   addNode: (title, description) => ipcRenderer.invoke('add-node', title, description),
   editNode: (nodeId, title, description) => ipcRenderer.invoke('edit-node', nodeId, title, description),
   deleteNode: (nodeId) => ipcRenderer.invoke('delete-node', nodeId),
+  searchNodes: (searchTerm, tagIds) => ipcRenderer.invoke('search-nodes', searchTerm, tagIds),
+  
   getTags: () => ipcRenderer.invoke('get-tags'),
   addTag: (tagName) => ipcRenderer.invoke('add-tag', tagName),
   editTag: (tagId, tagName) => ipcRenderer.invoke('edit-tag', tagId, tagName),
@@ -29,5 +31,7 @@ contextBridge.exposeInMainWorld('electron', {
   openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
 
   openInFileExplorer: (filePath) => ipcRenderer.invoke('open-in-file-explorer', filePath),
+
+  
 });
 

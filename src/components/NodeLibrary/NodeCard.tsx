@@ -43,6 +43,8 @@ const NodeCard = ({ nodeId, title, description, tags = [], isSelected }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedFilePathId, setSelectedFilePathId] = useState(null);
   useEffect(() => {
+
+    fetchNodeTags();
     // Add event listeners for dragover and drop
     const handleDragOver = (e) => {
       e.preventDefault(); // Necessary to allow a drop

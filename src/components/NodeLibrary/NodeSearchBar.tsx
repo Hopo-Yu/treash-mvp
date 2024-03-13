@@ -5,9 +5,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import NewNodeModal from './NewNodeModal'; // Import the NewNodeModal component
 
-const NodeSearchBar = () => {
+const NodeSearchBar = ({ onSearch }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
+  const handleSearch = () => {
+    onSearch(searchKeyword); // Trigger the search with the current keyword
+  };
+  
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
@@ -20,16 +25,19 @@ const NodeSearchBar = () => {
     <>
       <div style={{ display: 'flex', alignItems: 'center', margin: '8px' }}>
         <TextField
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
           label="Search nodes"
           variant="outlined"
           fullWidth
           size="small"
           style={{ marginRight: '4px' }}
+          onKeyPress={(e) => { if (e.key === 'Enter') handleSearch(); }}
         />
-        <IconButton onClick={() => console.log('Searching nodes...')}>
+        <IconButton onClick={handleSearch}>
           <SearchIcon />
         </IconButton>
-        <IconButton onClick={openModal}>
+        <IconButton onClick={() => setIsModalOpen(true)}>
           <AddIcon />
         </IconButton>
       </div>

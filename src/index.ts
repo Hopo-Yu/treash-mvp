@@ -94,6 +94,11 @@ app.on('ready', async () => {
     console.log('IPC received delete request for nodeId:', nodeId);
     NodeModel.deleteNode(nodeId);
   });
+
+  ipcMain.handle('search-nodes', async (event, searchTerm, tagIds) => {
+    return NodeModel.searchNodes(searchTerm, tagIds);
+  });
+  
   
   ipcMain.handle('get-tags', async () => {
     return TagModel.getTags();

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import NodeSearchBar from './NodeSearchBar';
 import TagFilter from '../TagFilter';
 import NodeDisplay from './NodeDisplay';
@@ -8,25 +8,21 @@ import { RootState } from '../../redux/store';
 import '../../styles/NodeLibrary.scss';
 
 const NodeLibrary = () => {
-  // This line is no longer needed because we're getting tagFilter directly from the Redux state now
-  // const [selectedTagIds, setSelectedTagIds] = useState([]);
-
-  // Directly use tagFilter from Redux state
   const tagFilter = useSelector((state: RootState) => state.nodes.tagFilter);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
-  // This handler might need adjustment if you plan to directly manipulate the tagFilter state in Redux
-  const handleSelectedTagsChange = (tagIds) => {
-    // This logic will need to change to dispatch an action to Redux to update the tagFilter
-    // For example, dispatch(setTagFilter(tagIds))
+  // Update to handle search keyword submission from NodeSearchBar
+  const handleSearch = (keyword) => {
+    setSearchKeyword(keyword);
   };
 
   return (
     <Box className="node-library-container" sx={{ padding: 1 }}>
-      <NodeSearchBar />
+      <NodeSearchBar onSearch={handleSearch} />
       <Box className="tag-filter" sx={{ marginTop: 1 }}>
-        <TagFilter onSelectedTagsChange={handleSelectedTagsChange} />
+        <TagFilter />
       </Box>
-      <NodeDisplay selectedTagIds={tagFilter} />
+      <NodeDisplay selectedTagIds={tagFilter} searchKeyword={searchKeyword} />
     </Box>
   );
 };
