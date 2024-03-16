@@ -8,8 +8,17 @@ import AddIcon from '@mui/icons-material/Add';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import { Tag} from '../types/types';
 
-const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpdate }) => {
+interface TagManagementModalProps {
+  open: boolean;
+  onClose: () => void;
+  nodeId: number;
+  selectedTags: number[]; // Assuming selectedTags is an array of TagID
+  onTagUpdate: (updatedTag: { TagID: number; isSelected: boolean }) => void;
+}
+
+const TagManagementModal: React.FC<TagManagementModalProps> = ({ open, onClose, nodeId, selectedTags, onTagUpdate }) => {
   const [tags, setTags] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [newTagName, setNewTagName] = useState('');
@@ -37,9 +46,8 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
     }
   };
 
-  const fetchTags = async () => {
-    // Fetch tags from the database
-    const fetchedTags = await window.electron.getTags();
+  const fetchTags = async (): Promise<void> => {
+    const fetchedTags: Tag[] = await window.electron.getTags();
     setTags(fetchedTags);
   };
 
@@ -63,11 +71,11 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
     setNodeTags(fetchedNodeTags);
   };
 
-  const handleTagSelection = async (tag) => {
+  const handleTagSelection = async (tag: Tag) => {
     // Check if the tag ID is already in the nodeTags array
-    const tagIsSelected = nodeTags.some(t => t.TagID === tag.TagID);
+    const isSelected = nodeTags.some(t => t.TagID === tag.TagID);
   
-    if (tagIsSelected) {
+    if (isSelected) {
       // If tag is already selected, remove it (delete association)
       await window.electron.deleteNodeTag(nodeId, tag.TagID);
     } else {
@@ -79,13 +87,12 @@ const TagManagementModal = ({ open, onClose, nodeId, selectedTags = [], onTagUpd
     fetchNodeTags();
   
     // Inform the parent component about the update
-    onTagUpdate(tag); 
+    onTagUpdate({ TagID: tag.TagID, isSelected });
   };
 
-  const handleDeleteTag = async (tagId) => {
+  const handleDeleteTag = async (tagId: number) => {
     try {
-      // First, delete all associations of this tag in the NodeTag table
-      await window.electron.deleteNodeTagAssociations(tagId);
+      
   
       // Then, delete the tag from the Tag table
       await window.electron.deleteTag(tagId);

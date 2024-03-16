@@ -1,22 +1,32 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect} from 'react';
 import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
 import NodePositionCircle from '../../src/components/NodePositionCircle'; 
-import { useDispatch } from 'react-redux';
-import { selectNode } from '../../src/redux/slices/nodesSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../redux/store'; // Update the import path as needed
+import { selectNode, setNodePositions } from '../redux/slices/nodesSlice'; // Update the import path as needed
 
-const DropOverlay = ({ children, width, height, selectedTagIds }) => {
-    const overlayRef = useRef(null);
-    const [nodePositions, setNodePositions] = useState([]);
+import { Node} from '../types/types';
+
+interface DropOverlayProps {
+  children: React.ReactNode;
+  width: string | number;
+  height: string | number;
+  selectedTagIds: number[];
+}
+
+const DropOverlay: React.FC<DropOverlayProps> = ({ children, width, height, selectedTagIds }) => {
+    const overlayRef = useRef<HTMLDivElement>(null);
     const dispatch = useDispatch();
+    const nodePositions = useSelector((state: RootState) => state.nodes.nodePositions);
+
     const fetchNodePositions = async () => {
       let positions;
       if (selectedTagIds.length > 0) {
-          console.log('Tag IDs to fetch node positions for:', selectedTagIds); // Log the tagIds to fetch
           
-          // Fetch node IDs based on selected tag IDs first
-          const nodeIds = await window.electron.getNodesByTagIds(selectedTagIds);
-          const uniqueNodeIds = [...new Set(nodeIds.map(node => node.NodeID))]; // Remove duplicates
+          // Fetch nodes based on selected tag IDs first
+          const nodes: Node[] = await window.electron.getNodesByTagIds(selectedTagIds);
+          const uniqueNodeIds: number[] = [...new Set(nodes.map(node => node.NodeID))];
           
           // Then fetch node positions based on the node IDs
           positions = await window.electron.getNodePositionsByNodeIds(uniqueNodeIds);
@@ -24,13 +34,13 @@ const DropOverlay = ({ children, width, height, selectedTagIds }) => {
           // Fetch all positions if no tag is selected
           positions = await window.electron.getAllNodePositions();
       }
-      console.log('Fetched node positions:', positions);
-      setNodePositions(positions);
-    };
+      dispatch(setNodePositions(positions));
+  };
+  
 
     const [, drop] = useDrop(() => ({
         accept: "node",
-        drop: (item, monitor) => {
+        drop: (item: { id: number }, monitor) => {
             const clientOffset = monitor.getClientOffset();
             if (clientOffset && overlayRef.current) {
                 const rect = overlayRef.current.getBoundingClientRect();
@@ -44,34 +54,27 @@ const DropOverlay = ({ children, width, height, selectedTagIds }) => {
                 fetchNodePositions();
             }
         },
-    }), [nodePositions]); // Ensure the drop effect updates when nodePositions changes
+    }), [nodePositions]);
 
     useEffect(() => {
-      // Refetch node positions whenever selectedTagIds changes
       fetchNodePositions();
-    }, [selectedTagIds]); 
+    }, [selectedTagIds, nodePositions]); // Add dispatch to dependency array
 
-    // Handler functions for NodePositionCircle
-    const handleRightClick = (nodeID) => {
-        console.log('Right-clicked on node:', nodeID);
-        // Handle right-click logic here
-    };
 
-    const handleClick = (nodeID) => {
+    const handleClick = (nodeID:number) => {
         console.log('Clicked on node:', nodeID);
         // Handle left-click logic here
     };
 
-    const handleDoubleClick = (nodeID) => {
-      console.log('Double-clicked on node:', nodeID);
+    const handleDoubleClick = (nodeID:number) => {
       dispatch(selectNode(nodeID)); // Dispatch action to select the node
   };
-    const handleMouseEnter = (nodeID) => {
+    const handleMouseEnter = (nodeID:number) => {
         console.log('Mouse entered node:', nodeID);
         // Handle mouse enter logic here
     };
 
-    const handleMouseLeave = (nodeID) => {
+    const handleMouseLeave = (nodeID:number) => {
         console.log('Mouse left node:', nodeID);
         // Handle mouse leave logic here
     };
@@ -85,10 +88,10 @@ const DropOverlay = ({ children, width, height, selectedTagIds }) => {
             {nodePositions.map((position) => (
                 <NodePositionCircle
                     key={position.PositionID}
+                    positionID={position.PositionID}
                     nodeID={position.NodeID}
                     x={position.X}
                     y={position.Y}
-                    onRightClick={handleRightClick}
                     onClick={handleClick}
                     onDoubleClick={handleDoubleClick}
                     onMouseEnter={handleMouseEnter}

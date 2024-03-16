@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import Box from '@mui/material/Box';
 import MapComponent from './MapComponent';
-import DropOverlay from '../../../extensions/Map2d/DropOverlay';
-import TagFilter from './TagFilter'; // Import TagFilter component
-import '../../styles/WorldMapVisualization.scss'; // Importing the Sass file
+import DropOverlay from '../DropOverlay';
+import TagFilter from './TagFilter'; 
+import '../../styles/WorldMapVisualization.scss'; 
 
 const WorldMapVisualization: React.FC = () => {
-  const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
-  useEffect(() => {
-    console.log("selectedTagIds state after setSelectedTagIds:", selectedTagIds);
-  }, [selectedTagIds]); // This useEffect will run whenever selectedTagIds changes
+  
 
-  const handleSelectedTagsChange = (tagIds) => {
-    console.log("Selected Tag IDs in WorldMapVisualization before setting state:", tagIds);
+  const handleSelectedTagsChange = (tagIds: number[]) => {
+    
     setSelectedTagIds(tagIds);
   };
 

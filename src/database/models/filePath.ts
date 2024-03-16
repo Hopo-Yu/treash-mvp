@@ -3,7 +3,6 @@ import db from '../index';
 import path from 'path';
 
 export const addFilePath = (nodeId: number, filePath: string) => {
-  console.log('Inserting file path into database:', { nodeId, filePath });
   const stmt = db.prepare('INSERT INTO FilePath (NodeID, Path) VALUES (?, ?)');
   const info = stmt.run(nodeId, filePath);
   return info.lastInsertRowid;
@@ -21,7 +20,6 @@ export const getFilePathsByNodeId = (nodeId: number) => {
 };
 
 export const deleteFilePath = (filePathId: number) => {
-  console.log('Deleting file path from database for FilePathID:', filePathId);
   const stmt = db.prepare('DELETE FROM FilePath WHERE FilePathID = ?');
   stmt.run(filePathId);
 };

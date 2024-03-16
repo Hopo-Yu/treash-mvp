@@ -8,7 +8,13 @@ import TextField from '@mui/material/TextField';
 import { useDispatch } from 'react-redux';
 import { setNodes } from '../../redux/slices/nodesSlice'; // Adjust import path as needed
 
-const NewNodeModal = ({ open, onClose }) => {
+interface NewNodeModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+
+const NewNodeModal: React.FC<NewNodeModalProps> = ({ open, onClose }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const dispatch = useDispatch();

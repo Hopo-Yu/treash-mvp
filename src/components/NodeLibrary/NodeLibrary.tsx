@@ -12,7 +12,7 @@ const NodeLibrary = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   // Update to handle search keyword submission from NodeSearchBar
-  const handleSearch = (keyword) => {
+  const handleSearch = (keyword:string) => {
     setSearchKeyword(keyword);
   };
 

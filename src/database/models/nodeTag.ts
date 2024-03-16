@@ -1,12 +1,13 @@
 // database/models/nodeTag.ts
 import db from '../index';
+import { Node } from '../../types/types';
 
-export const addNodeTag = (nodeId: number, tagId: number) => {
+export const addNodeTag = (nodeId: number, tagId: number): void => {
   const stmt = db.prepare('INSERT INTO NodeTag (NodeID, TagID) VALUES (?, ?)');
   stmt.run(nodeId, tagId);
 };
 
-export const deleteNodeTag = (nodeId: number, tagId: number) => {
+export const deleteNodeTag = (nodeId: number, tagId: number): void => {
   const stmt = db.prepare('DELETE FROM NodeTag WHERE NodeID = ? AND TagID = ?');
   stmt.run(nodeId, tagId);
 };
@@ -16,19 +17,14 @@ export const getNodeTags = (nodeId: number) => {
   return stmt.all(nodeId);
 };
 
-export const deleteNodeTagAssociations = (tagId: number) => {
-  const stmt = db.prepare('DELETE FROM NodeTag WHERE TagID = ?');
-  stmt.run(tagId);
-};
-
-
-export const getNodesByTagIds = (tagIds) => {
+export const getNodesByTagIds = (tagIds: number[]): Node[] => {
   const placeholders = tagIds.map(() => '?').join(',');
-  const stmt = db.prepare(`
-      SELECT DISTINCT Node.NodeID, Node.* 
-      FROM Node
-      JOIN NodeTag ON Node.NodeID = NodeTag.NodeID
-      WHERE NodeTag.TagID IN (${placeholders})
-  `);
-  return stmt.all(tagIds);
+  const query = `
+    SELECT DISTINCT Node.NodeID, Node.Title, Node.Description
+    FROM Node
+    JOIN NodeTag ON Node.NodeID = NodeTag.NodeID
+    WHERE NodeTag.TagID IN (${placeholders})
+  `;
+  const stmt = db.prepare(query);
+  return stmt.all(...tagIds) as Node[]; // Ensure that the returned type matches the `Node` interface
 };

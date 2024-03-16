@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain, dialog,  shell } from 'electron';
-import { exec } from 'child_process';
 import { initializeDatabase } from './database/index';
 import * as NodeModel from './database/models/node';
 import * as TagModel from './database/models/tag';
@@ -71,6 +70,15 @@ app.on('ready', async () => {
         throw error; // or handle error as needed
     }
 });
+  ipcMain.handle('delete-node-position', async (event, positionId) => {
+    try {
+      NodePositionModel.deleteNodePosition(positionId);
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting node position:', error);
+      return { success: false, error: error.message };
+    }
+  });
 
   // above is world map 2d
 
@@ -129,15 +137,7 @@ app.on('ready', async () => {
     return NodeTagModel.getNodeTags(nodeId);
   });
 
-  ipcMain.handle('delete-node-tag-associations', async (event, tagId) => {
-    try {
-      NodeTagModel.deleteNodeTagAssociations(tagId);
-      return { success: true };
-    } catch (error) {
-      console.error('Error in deleteNodeTagAssociations:', error);
-      return { success: false, error: error.message };
-    }
-  });
+
 
   ipcMain.handle('get-node-title', async (event, nodeId) => {
     return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel

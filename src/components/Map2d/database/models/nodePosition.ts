@@ -1,24 +1,22 @@
-// src/components/Map2d/database/models/nodePosition.ts
+import db from '../../../../database/index';
+import { NodePosition } from '../../../../types/types';
 
-import db from '../../../../database/index'; 
-
-export const saveNodePosition = (nodeId: number, x: number, y: number) => {
+export const saveNodePosition = (nodeId: number, x: number, y: number): void => {
   const stmt = db.prepare('INSERT INTO NodePosition (NodeID, X, Y) VALUES (?, ?, ?)');
   stmt.run(nodeId, x, y);
 };
 
-export const getAllNodePositions = () => {
-  return db.prepare('SELECT * FROM NodePosition').all();
+export const getAllNodePositions = (): NodePosition[] => {
+  return db.prepare('SELECT * FROM NodePosition').all() as NodePosition[];
 };
 
-export const getNodePositionsByNodeIds = (nodeIds) => {
-  // Ensure nodeIds is an array of numbers/strings
-  const ids = nodeIds.map(node => node.NodeID || node);
-  
-  const placeholders = ids.map(() => '?').join(',');
-  const stmt = db.prepare(`
-      SELECT * FROM NodePosition
-      WHERE NodeID IN (${placeholders})
-  `);
-  return stmt.all(ids);
+export const getNodePositionsByNodeIds = (nodeIds: number[]): NodePosition[] => {
+  const placeholders: string = nodeIds.map(() => '?').join(',');
+  const stmt = db.prepare(`SELECT * FROM NodePosition WHERE NodeID IN (${placeholders})`);
+  return stmt.all(nodeIds) as NodePosition[];
+};
+
+export const deleteNodePosition = (positionId: number): void => {
+  const stmt = db.prepare('DELETE FROM NodePosition WHERE PositionID = ?');
+  stmt.run(positionId);
 };
