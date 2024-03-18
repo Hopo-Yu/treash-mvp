@@ -28,6 +28,12 @@ export const getNodeTitle = (nodeId: number) => {
   return node?.Title ?? null;
 };
 
+export const getNodeDescription = (nodeId: number): string | null => {
+  const stmt = db.prepare('SELECT Description FROM Node WHERE NodeID = ?');
+  const node = stmt.get(nodeId) as Node;
+  return node ? node.Description : null;
+};
+
 export const searchNodes = (searchTerm: string = '', tagIds: number[] = []): Node[] => {
   const tagConditions = tagIds.length > 0 ? `NodeTag.TagID IN (${tagIds.join(',')})` : '1=1';
   const searchConditions = searchTerm ? `Node.Title LIKE '%${searchTerm}%' OR Node.Description LIKE '%${searchTerm}%'` : '1=1';

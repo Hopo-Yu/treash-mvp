@@ -10,9 +10,10 @@ interface ElectronAPI {
   deleteNode: (nodeId: number) => Promise<void>;
   searchNodes: (searchTerm: string, tagIds: number[]) => Promise<Node[]>;
   getNodeTitle: (nodeId: number) => Promise<string>;
+  getNodeDescription: (nodeId: number) => Promise<string>;
 
   // Tag operations
-  getTags: () => Promise<Tag[]>;
+  getTags: (searchTerm?: string) => Promise<Tag[]>;
   addTag: (tagName: string) => Promise<void>;
   editTag: (tagId: number, tagName: string) => Promise<void>;
   deleteTag: (tagId: number) => Promise<void>;

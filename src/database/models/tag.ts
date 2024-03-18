@@ -1,7 +1,11 @@
 // database/models/tag.ts
 import db from '../index';
 
-export const getTags = () => {
+export const getTags = (searchTerm?: string) => {
+  if (searchTerm) {
+    const stmt = db.prepare('SELECT * FROM Tag WHERE TagName LIKE ?');
+    return stmt.all(`%${searchTerm}%`);
+  }
   return db.prepare('SELECT * FROM Tag').all();
 };
 

@@ -11,7 +11,6 @@ const MapComponent: React.FC = () => {
     const [, drop] = useDrop(() => ({
         accept: "node", // Make sure this type corresponds to the type used in your draggable items
         drop: (item, monitor) => {
-          console.log(item); // Log the item to ensure it's the expected data
           const clientOffset = monitor.getClientOffset();
           if (clientOffset && overlayRef.current) {
               const rect = overlayRef.current.getBoundingClientRect();

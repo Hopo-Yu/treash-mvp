@@ -90,7 +90,6 @@ app.on('ready', async () => {
   
 
   ipcMain.handle('add-node', async (event, title, description) => {
-    console.log('Adding node:', { title, description });
     return NodeModel.addNode(title, description);
   });
 
@@ -99,7 +98,6 @@ app.on('ready', async () => {
   });
   
   ipcMain.handle('delete-node', async (event, nodeId) => {
-    console.log('IPC received delete request for nodeId:', nodeId);
     NodeModel.deleteNode(nodeId);
   });
 
@@ -107,9 +105,17 @@ app.on('ready', async () => {
     return NodeModel.searchNodes(searchTerm, tagIds);
   });
   
+  ipcMain.handle('get-node-title', async (event, nodeId) => {
+    return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel
+  });
+
+  ipcMain.handle('get-node-description', async (event, nodeId) => {
+    return NodeModel.getNodeDescription(nodeId);
+  });
   
-  ipcMain.handle('get-tags', async () => {
-    return TagModel.getTags();
+
+  ipcMain.handle('get-tags', async (event, searchTerm) => {
+    return TagModel.getTags(searchTerm);
   });
 
   ipcMain.handle('add-tag', async (event, tagName) => {
@@ -139,14 +145,11 @@ app.on('ready', async () => {
 
 
 
-  ipcMain.handle('get-node-title', async (event, nodeId) => {
-    return NodeModel.getNodeTitle(nodeId); // Make sure you have this function implemented in your NodeModel
-  });
+  
 
   ipcMain.handle('get-nodes-by-tag-ids', async (event, tagIds) => {
-    console.log("Received tagIds in main process:", tagIds); // Log received tagIds
+
     const nodes = await NodeTagModel.getNodesByTagIds(tagIds);
-    console.log("Nodes fetched from DB:", nodes); // Log the nodes fetched from DB
     return nodes;  
   });
 

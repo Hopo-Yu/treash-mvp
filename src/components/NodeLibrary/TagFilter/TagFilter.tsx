@@ -4,40 +4,37 @@ import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import TagManagementModal from './TagManagementModal';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../redux/store';
-import { setTagFilter, setAllTags } from '../redux/slices/nodesSlice';
-import {Tag} from '../types/types';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import {Tag} from '../../../types/types';
 
-const TagFilter = () => {
-  const dispatch = useDispatch();
-  const tagFilterIds = useSelector((state: RootState) => state.nodes.tagFilter);
-  const allTags: Tag[] = useSelector((state: RootState) => state.nodes.allTags);
+interface TagFilterProps {
+  selectedTagIds: number[];
+  onSelectedTagsChange: (newSelectedTagIds: number[]) => void;
+}
+
+
+const TagFilter: React.FC<TagFilterProps> = ({ selectedTagIds, onSelectedTagsChange }) => {
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState<boolean>(false);
+  const globalTagRefreshTrigger = useSelector((state: RootState) => state.nodes.tagDisplayRefreshTrigger);
 
   useEffect(() => {
+    // Fetch all tags to display in TagManagementModal and in the filter chips
     const fetchTags = async () => {
-      const tags: Tag[] = await window.electron.getTags(); // Fetch the current list of tags and ensure it's typed
-      dispatch(setAllTags(tags));
+      const fetchedTags = await window.electron.getTags();
+      setAllTags(fetchedTags);
     };
-
     fetchTags();
-  }, [allTags]); 
-
+  }, [globalTagRefreshTrigger]);
 
   const handleTagRemove = (tagId: number) => {
-    dispatch(setTagFilter(tagFilterIds.filter(id => id !== tagId)));
-  };
-
-  const handleTagUpdate = (updatedTag: { TagID: number; isSelected: boolean }) => {
-    const newTagFilterIds = updatedTag.isSelected
-      ? tagFilterIds.filter(id => id !== updatedTag.TagID)
-      : [...tagFilterIds, updatedTag.TagID];
-    dispatch(setTagFilter(newTagFilterIds));
+    const updatedSelectedTags = selectedTagIds.filter(id => id !== tagId);
+    onSelectedTagsChange(updatedSelectedTags);
   };
 
   const handleClearAll = () => {
-    dispatch(setTagFilter([]));
+    onSelectedTagsChange([]);
   };
 
   const openTagManagementModal = () => setIsTagManagementModalOpen(true);
@@ -46,7 +43,7 @@ const TagFilter = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', margin: '8px' }}>
-      {tagFilterIds.map(tagId => {
+      {selectedTagIds.map(tagId => {
         const tag = allTags.find((t) => t.TagID === tagId);
         return (
           <Chip
@@ -66,9 +63,8 @@ const TagFilter = () => {
       <TagManagementModal
         open={isTagManagementModalOpen}
         onClose={closeTagManagementModal}
-        nodeId={null}
-        selectedTags={tagFilterIds} // Pass tagFilterIds instead of selectedTags
-        onTagUpdate={handleTagUpdate}
+        selectedTagIds={selectedTagIds}
+        onSelectedTagsChange={onSelectedTagsChange}
       />
     </div>
   );

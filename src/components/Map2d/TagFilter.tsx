@@ -1,63 +1,59 @@
-// TagFilter.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
-import TagManagementModal from '../TagManagementModal';
+import TagManagementModal from './TagManagementModal';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import {Tag} from '../../types/types';
 
-const TagFilter = ({ onSelectedTagsChange }) => {
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+interface TagFilterProps {
+  selectedTagIds: number[];
+  onSelectedTagsChange: (newSelectedTagIds: number[]) => void;
+}
+
+
+const TagFilter: React.FC<TagFilterProps> = ({ selectedTagIds, onSelectedTagsChange }) => {
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState<boolean>(false);
+  const globalTagRefreshTrigger = useSelector((state: RootState) => state.nodes.tagDisplayRefreshTrigger);
 
   useEffect(() => {
-    const fetchSelectedTags = async () => {
+    // Fetch all tags to display in TagManagementModal and in the filter chips
+    const fetchTags = async () => {
       const fetchedTags = await window.electron.getTags();
-      setSelectedTags(fetchedTags);
+      setAllTags(fetchedTags);
     };
-    fetchSelectedTags();
-  }, []);
+    fetchTags();
+  }, [globalTagRefreshTrigger]);
 
-  useEffect(() => {
-    // Pass only the array of selected tag IDs to the parent component
-    if (onSelectedTagsChange) {
-      onSelectedTagsChange(selectedTags.map(tag => tag.TagID));
-    }
-  }, [selectedTags]); 
+  const handleTagRemove = (tagId: number) => {
+    const updatedSelectedTags = selectedTagIds.filter(id => id !== tagId);
+    onSelectedTagsChange(updatedSelectedTags);
+  };
 
-  const handleTagRemove = async (tagId) => {
-    const updatedTags = selectedTags.filter(tag => tag.TagID !== tagId);
-    setSelectedTags(updatedTags);
-  };
-  
-  const handleTagUpdate = (updatedTag) => {
-    const isTagPresent = selectedTags.some(tag => tag.TagID === updatedTag.TagID);
-    let updatedTags;
-    if (isTagPresent) {
-      updatedTags = selectedTags.filter(tag => tag.TagID !== updatedTag.TagID);
-    } else {
-      updatedTags = [...selectedTags, updatedTag];
-    }
-    setSelectedTags(updatedTags);
-  };
-  
   const handleClearAll = () => {
-    setSelectedTags([]);
+    onSelectedTagsChange([]);
   };
 
   const openTagManagementModal = () => setIsTagManagementModalOpen(true);
   const closeTagManagementModal = () => setIsTagManagementModalOpen(false);
 
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', margin: '8px' }}>
-      {selectedTags.map((tag) => (
-        <Chip 
-          key={tag.TagID} 
-          label={tag.TagName} 
-          onDelete={() => handleTagRemove(tag.TagID)} 
-          style={{ marginRight: '4px' }} 
-        />
-      ))}
+      {selectedTagIds.map(tagId => {
+        const tag = allTags.find((t) => t.TagID === tagId);
+        return (
+          <Chip
+            key={tagId}
+            label={tag?.TagName || 'Unknown Tag'}
+            onDelete={() => handleTagRemove(tagId)}
+            style={{ marginRight: '4px' }}
+          />
+        );
+      })}
       <IconButton size="small" onClick={openTagManagementModal}>
         <AddIcon />
       </IconButton>
@@ -67,9 +63,8 @@ const TagFilter = ({ onSelectedTagsChange }) => {
       <TagManagementModal
         open={isTagManagementModalOpen}
         onClose={closeTagManagementModal}
-        nodeId={null} // In case of a filter, nodeId might be null or you need a different approach
-        selectedTags={selectedTags.map(tag => tag.TagID)} // Pass tag IDs
-        onTagUpdate={handleTagUpdate} // Pass the callback
+        selectedTagIds={selectedTagIds}
+        onSelectedTagsChange={onSelectedTagsChange}
       />
     </div>
   );

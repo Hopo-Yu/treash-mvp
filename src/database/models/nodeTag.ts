@@ -26,5 +26,5 @@ export const getNodesByTagIds = (tagIds: number[]): Node[] => {
     WHERE NodeTag.TagID IN (${placeholders})
   `;
   const stmt = db.prepare(query);
-  return stmt.all(...tagIds) as Node[]; // Ensure that the returned type matches the `Node` interface
+  return stmt.all(...tagIds) as Node[]; 
 };

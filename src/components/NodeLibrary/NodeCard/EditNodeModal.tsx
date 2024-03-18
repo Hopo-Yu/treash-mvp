@@ -6,22 +6,38 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { useDispatch } from 'react-redux';
-import { setNodes } from '../../redux/slices/nodesSlice';
 
-const EditNodeModal = ({ open, onClose, nodeId, currentTitle, currentDescription }) => {
+
+interface EditNodeModalProps {
+  open: boolean;
+  onClose: () => void;
+  nodeId: number; // Assuming nodeId is a number. Adjust accordingly if it's not.
+  currentTitle: string;
+  currentDescription: string;
+  onEditSuccess?: () => void; // Optional prop
+}
+
+
+const EditNodeModal: React.FC<EditNodeModalProps> = ({
+  open,
+  onClose,
+  nodeId,
+  currentTitle,
+  currentDescription,
+  onEditSuccess,
+}) => {
   const [title, setTitle] = useState(currentTitle);
   const [description, setDescription] = useState(currentDescription);
-  const dispatch = useDispatch();
 
   const handleSave = async () => {
     try {
       await window.electron.editNode(nodeId, title, description);
+
+      if (onEditSuccess) {
+        onEditSuccess();
+      }
+
       onClose();
-      window.electron.getNodes()
-        .then(updatedNodes => {
-          dispatch(setNodes(updatedNodes));
-        });
     } catch (error) {
       console.error('Error updating node:', error);
     }

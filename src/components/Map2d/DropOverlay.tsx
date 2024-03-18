@@ -1,12 +1,9 @@
-import React, { useRef, useEffect} from 'react';
+import React, { useRef, useEffect, useState} from 'react';
 import { useDrop } from 'react-dnd';
 import Box from '@mui/material/Box';
-import NodePositionCircle from '../../src/components/NodePositionCircle'; 
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../redux/store'; // Update the import path as needed
-import { selectNode, setNodePositions } from '../redux/slices/nodesSlice'; // Update the import path as needed
-
-import { Node} from '../types/types';
+import NodePositionCircle from './NodePositionCircle'; import { Node} from '../../types/types';
+import { useDispatch } from 'react-redux';
+import { selectNode } from '../../redux/slices/nodesSlice'; 
 
 interface DropOverlayProps {
   children: React.ReactNode;
@@ -17,49 +14,44 @@ interface DropOverlayProps {
 
 const DropOverlay: React.FC<DropOverlayProps> = ({ children, width, height, selectedTagIds }) => {
     const overlayRef = useRef<HTMLDivElement>(null);
+    const [nodePositions, setNodePositions] = useState([]);
     const dispatch = useDispatch();
-    const nodePositions = useSelector((state: RootState) => state.nodes.nodePositions);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const fetchNodePositions = async () => {
       let positions;
       if (selectedTagIds.length > 0) {
-          
-          // Fetch nodes based on selected tag IDs first
-          const nodes: Node[] = await window.electron.getNodesByTagIds(selectedTagIds);
-          const uniqueNodeIds: number[] = [...new Set(nodes.map(node => node.NodeID))];
-          
-          // Then fetch node positions based on the node IDs
-          positions = await window.electron.getNodePositionsByNodeIds(uniqueNodeIds);
+        const nodes = await window.electron.getNodesByTagIds(selectedTagIds) as Node[];
+
+        const uniqueNodeIds = [...new Set(nodes.map(node => node.NodeID))];
+        positions = await window.electron.getNodePositionsByNodeIds(uniqueNodeIds);
       } else {
-          // Fetch all positions if no tag is selected
-          positions = await window.electron.getAllNodePositions();
+        // Fetch all positions if no tag is selected
+        positions = await window.electron.getAllNodePositions();
       }
-      dispatch(setNodePositions(positions));
-  };
+      setNodePositions(positions);
+    };
   
 
     const [, drop] = useDrop(() => ({
-        accept: "node",
-        drop: (item: { id: number }, monitor) => {
-            const clientOffset = monitor.getClientOffset();
-            if (clientOffset && overlayRef.current) {
-                const rect = overlayRef.current.getBoundingClientRect();
-                const x = clientOffset.x - rect.left;
-                const y = clientOffset.y - rect.top;
-                console.log(`Dropped node at x: ${x}, y: ${y}`);
-                
-                // Save the position in the database
-                window.electron.saveNodePosition(item.id, x, y);
-                // Fetch updated positions
-                fetchNodePositions();
-            }
-        },
-    }), [nodePositions]);
+      accept: "node",
+      drop: (item: { id: number }, monitor) => {
+        const clientOffset = monitor.getClientOffset();
+        if (clientOffset && overlayRef.current) {
+          const rect = overlayRef.current.getBoundingClientRect();
+          const x = clientOffset.x - rect.left;
+          const y = clientOffset.y - rect.top;
+          
+          window.electron.saveNodePosition(item.id, x, y).then(fetchNodePositions);
+        }
+      },
+    }), [selectedTagIds]);
 
     useEffect(() => {
       fetchNodePositions();
-    }, [selectedTagIds, nodePositions]); // Add dispatch to dependency array
-
+    }, [selectedTagIds, refreshTrigger]);
+  
+    const handleDelete = () => setRefreshTrigger(prev => prev + 1);
 
     const handleClick = (nodeID:number) => {
         console.log('Clicked on node:', nodeID);
@@ -96,6 +88,7 @@ const DropOverlay: React.FC<DropOverlayProps> = ({ children, width, height, sele
                     onDoubleClick={handleDoubleClick}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
+                    onDelete={handleDelete}
                 />
             ))}
             <div 

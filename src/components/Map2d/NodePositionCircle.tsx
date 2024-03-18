@@ -10,6 +10,7 @@ interface NodePositionCircleProps {
   onDoubleClick: (nodeID: number) => void;
   onMouseEnter: (nodeID: number) => void;
   onMouseLeave: (nodeID: number) => void;
+  onDelete: () => void;
 }
 
 const NodePositionCircle: React.FC<NodePositionCircleProps> = ({
@@ -21,6 +22,7 @@ const NodePositionCircle: React.FC<NodePositionCircleProps> = ({
   onDoubleClick,
   onMouseEnter,
   onMouseLeave,
+  onDelete
 }) => {
     const [nodeTitle, setNodeTitle] = useState('');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -49,6 +51,7 @@ const NodePositionCircle: React.FC<NodePositionCircleProps> = ({
 
     const handleDelete = async () => {
         await window.electron.deleteNodePosition(positionID);
+        onDelete();
     };
 
     return (

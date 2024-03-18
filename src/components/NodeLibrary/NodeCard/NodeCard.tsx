@@ -1,5 +1,5 @@
 // NodeCard.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card, CardContent, Typography, IconButton, Chip, List,
   ListItem, ListItemText, ListItemSecondaryAction, Menu, MenuItem
@@ -9,51 +9,77 @@ import {
   ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import EditNodeModal from './EditNodeModal';
-import TagManagementModal from '../TagManagementModal';
+import TagManagementModal from './TagManagementModal';
 import { useDrag } from 'react-dnd';
-import { selectNode } from '../../redux/slices/nodesSlice'; 
-import { Tag, FilePath } from '../../types/types';
+import { selectNode, triggerNodeDisplayRefresh, triggerTagDisplayRefresh } from '../../../redux/slices/nodesSlice'; 
+import { Tag, FilePath } from '../../../types/types';
+import { RootState } from '../../../redux/store';
 
 interface NodeCardProps {
   nodeId: number;
-  title: string;
-  description: string;
-  tags: Tag[];
   isSelected: boolean;
 }
 
 
 
-const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = [], isSelected }) => {
+
+const NodeCard: React.FC<NodeCardProps> = ({ nodeId, isSelected }) => {
   const dispatch = useDispatch();
+  
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState<boolean>(false);
-  const [nodeTags, setNodeTags] = useState<Tag[]>([]);
-  const [filePaths, setFilePaths] = useState<FilePath[]>([]);
-  const cardRef = useRef<HTMLDivElement>(null);
-  // State to manage collapsible sections
   const [isFilesExpanded, setIsFilesExpanded] = useState<boolean>(false);
-  // const [isNodesExpanded, setIsNodesExpanded] = useState<boolean>(false);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedFilePathId, setSelectedFilePathId] = useState(null);
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [filePaths, setFilePaths] = useState<FilePath[]>([]);
+
+
+  const [filePathsRefresh, setFilePathsRefresh] = useState(0);
+  const [localTagRefreshTrigger, setLocalTagRefreshTrigger] = useState(0);
+  const globalTagRefreshTrigger = useSelector((state: RootState) => state.nodes.tagDisplayRefreshTrigger);
   
   useEffect(() => {
-    const fetchNodeTags = async () => {
-      const fetchedNodeTags: Tag[] = await window.electron.getNodeTags(nodeId);
-      setNodeTags(fetchedNodeTags);
-    };
+    fetchNodeDetails();
+  }, [nodeId]); 
+  
+  const fetchNodeDetails = async () => {
+    const title = await window.electron.getNodeTitle(nodeId);
+    const description = await window.electron.getNodeDescription(nodeId);
+    
+    setTitle(title);
+    setDescription(description);
+  };
 
+  // useEffect for fetching file paths
+  useEffect(() => {
     const fetchFilePaths = async () => {
-      const paths: FilePath[] = await window.electron.getFilePathsByNodeId(nodeId);
-      setFilePaths(paths);
+      const fetchedFilePaths = await window.electron.getFilePathsByNodeId(nodeId);
+      setFilePaths(fetchedFilePaths);
     };
-
-    fetchNodeTags();
     fetchFilePaths();
-    // Assuming the event handlers are correctly typed or use any necessary casting
-  }, [nodeId]);
+  }, [nodeId, filePathsRefresh]);
+
+  // useEffect for fetching tags
+  useEffect(() => {
+    const fetchTags = async () => {
+      const fetchedTags = await window.electron.getNodeTags(nodeId);
+      setTags(fetchedTags);
+    };
+    fetchTags();
+  }, [nodeId, localTagRefreshTrigger, globalTagRefreshTrigger]);
+
+  const handleLocalTagRefresh = useCallback(() => {
+    setLocalTagRefreshTrigger(prevTrigger => prevTrigger + 1);
+  }, []);
 
   // Function to open the edit modal
   const openEditModal = () => setIsEditModalOpen(true);
@@ -67,40 +93,22 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
     // fetchNodeTags(); 
   };
 
-  const handleDelete = async () => {
+  const handleNodeDelete = async () => {
     try {
-      console.log('Attempting to delete node with ID:', nodeId);
       await window.electron.deleteNode(nodeId);
+      dispatch(triggerNodeDisplayRefresh());
     } catch (error) {
       console.error('Error deleting node:', error);
     }
   };
   
-  
-  
-
-  const fetchNodeTags = async () => {
-    const fetchedNodeTags: Tag[] = await window.electron.getNodeTags(nodeId);
-    setNodeTags(fetchedNodeTags);
-  };
 
   const handleTagRemove = async (tagId: number) => {
     await window.electron.deleteNodeTag(nodeId, tagId);
-    fetchNodeTags(); // Refresh the node's tags
+    dispatch(triggerNodeDisplayRefresh());
+    dispatch(triggerTagDisplayRefresh());
   };
 
-  const handleTagUpdate = (updatedTag: { TagID: number; isSelected: boolean }) => {
-    setNodeTags((prevTags) => {
-      // Determine if the tag should be added or removed based on isSelected
-      if (updatedTag.isSelected) {
-        // Remove the tag because isSelected true means it was already selected, now needs to be removed
-        return prevTags.filter(tag => tag.TagID !== updatedTag.TagID);
-      } else {
-        const newTag = { TagID: updatedTag.TagID, TagName: "Placeholder" }; 
-        return [...prevTags, newTag];
-      }
-    });
-  };
   
   
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -112,6 +120,7 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
   }));
   
 
+  //Node Card Selection
   const handleCardClick = () => {
     if (isSelected) {
         dispatch(selectNode(null)); // Deselect if already selected
@@ -123,19 +132,14 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
   
   const handleAddFile = async () => {
     try {
-      const filePath = await window.electron.selectFile(); // Corrected from electronAPI to electron
+      const filePath = await window.electron.selectFile();
       if (filePath) {
         await window.electron.addFilePath(nodeId, filePath);
-        fetchFilePaths();
+        setFilePathsRefresh(prev => prev + 1);
       }
     } catch (error) {
       console.error('Failed to select file:', error);
     }
-  };
-  
-  const fetchFilePaths = async () => {
-    const paths: FilePath[] = await window.electron.getFilePathsByNodeId(nodeId);
-    setFilePaths(paths);
   };
 
 
@@ -145,9 +149,13 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
   };
 
   const handleDeleteFile = async (filePathId: number) => {
-    await window.electron.deleteFilePath(filePathId);
-    fetchFilePaths();
-  };
+    try {
+      await window.electron.deleteFilePath(filePathId);
+      setFilePathsRefresh(prev => prev + 1);
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
+};
 
   const handleOpenFile = (filePathId: number) => {
     const filePath = filePaths.find(({ FilePathID }) => FilePathID === filePathId)?.Path;
@@ -213,13 +221,24 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
 
   return (
     <div ref={cardRef} style={{ opacity: isDragging ? 0.5 : 1, cursor: 'pointer', position: 'relative' }}>
-      <Card ref={drag} style={{ opacity: isDragging ? 0.8 : 1, cursor: 'pointer', position: 'relative', backgroundColor: isSelected ? '#333' : '', color: isSelected ? 'white' : '' }} onClick={handleCardClick}>
+      <Card
+        ref={drag}
+        style={{
+          opacity: isDragging ? 0.8 : 1,
+          cursor: 'pointer',
+          border: isSelected ? '2px solid #333' : '', 
+        }}
+        onClick={(e) => {
+          e.stopPropagation(); 
+          handleCardClick();
+        }}
+      >
         <CardContent>
-          <Typography variant="h5" component="div" style={{color: isSelected ? 'white' : 'inherit'}}>
+          <Typography variant="h5" component="div" style={{color: 'inherit'}}>
             {title}
           </Typography>
-          <Typography variant="body2" color="text.secondary" style={{color: isSelected ? 'rgba(255, 255, 255, 0.7)' : 'inherit'}}>
-            {description}
+          <Typography variant="body2" color="text.secondary" style={{color: 'inherit'}}>
+           {description}
           </Typography>
           <div onClick={() => setIsFilesExpanded(!isFilesExpanded)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
             <Typography>Related Files</Typography>
@@ -228,16 +247,16 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
           {isFilesExpanded && (
             <List dense>
               {renderFilePaths()}
-              <ListItem button onClick={handleAddFile}>
+              <ListItem onClick={handleAddFile}>
                 <ListItemText primary="Add File" />
                 <AddIcon />
               </ListItem>
             </List>
           )}
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
-          {nodeTags.map((tag) => (
+          {tags.map((tag) => (
             <Chip 
-              key={tag.TagID} 
+            key={`${nodeId}-${tag.TagID}`}
               label={tag.TagName} 
               onDelete={() => handleTagRemove(tag.TagID)} 
               style={{ marginRight: '4px' }} 
@@ -253,7 +272,7 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
           <IconButton onClick={openEditModal}>
             <EditIcon />
           </IconButton>
-          <IconButton onClick={handleDelete}>
+          <IconButton onClick={handleNodeDelete}>
             <DeleteIcon />
           </IconButton>
         </div>
@@ -263,13 +282,15 @@ const NodeCard: React.FC<NodeCardProps> = ({ nodeId, title, description, tags = 
           nodeId={nodeId}
           currentTitle={title}
           currentDescription={description}
+          onEditSuccess={() => {
+            fetchNodeDetails(); 
+          }}
         />
         <TagManagementModal
           open={isTagManagementModalOpen}
           onClose={closeTagManagementModal}
           nodeId={nodeId}
-          selectedTags={nodeTags.map(tag => tag.TagID)}
-          onTagUpdate={handleTagUpdate}
+          onLocalTagRefresh={handleLocalTagRefresh}
         />
       </Card>
     </div>
